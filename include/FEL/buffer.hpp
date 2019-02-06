@@ -90,6 +90,11 @@ namespace fel{
 		, end_elem{end_ptr}
 		{}
 
+		constexpr buffer(T* beg_ptr, std::size_t sz)
+		: begin_elem{beg_ptr}
+		, end_elem{beg_ptr+sz}
+		{}
+
 		constexpr typename buffer_iterator::difference_type size()
 		{
 			return end_elem - begin_elem;

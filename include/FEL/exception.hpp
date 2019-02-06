@@ -61,4 +61,17 @@ namespace fel{
 			what_str = "bad_variant_access error has occured";
 		}
 	};
+
+	class bad_hashmap_access : public runtime_error{
+		public:
+		bad_hashmap_access(const char* what)
+		: runtime_error{what}
+		{}
+
+		bad_hashmap_access()
+		: runtime_error{}
+		{
+			what_str = "bad_hashmap_access error has occured";
+		}
+	};
 }
