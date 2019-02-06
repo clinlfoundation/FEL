@@ -9,8 +9,11 @@ namespace fel{
 
 	constexpr nullopt_t nullopt;
 
-	template<typename T, typename U = typename std::enable_if<std::is_final<T>::value || std::is_fundamental<T>::value,int>::type>
-	class optional{
+	template<typename T, bool B = std::is_final<T>::value || std::is_fundamental<T>::value>
+	class optional;
+
+	template<typename T>
+	class optional<T,true>{
 		bool ready = false;
 		char buffer[sizeof(T)];
 	public:

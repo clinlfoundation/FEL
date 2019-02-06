@@ -40,17 +40,12 @@ namespace fel{
 		public:
 			void operator=(V value)
 			{
-				target->insert(std::move(key),value);
-			}
-			void operator=(V& value)
-			{
-				target->insert(std::move(key),value);
+				target->insert(std::move(key),fel::move(value));
 			}
 			void operator=(V&& value)
 			{
 				target->insert(fel::move(key),fel::move(value));
 			}
-
 			operator V&()
 			{
 				return target->get(key);
@@ -83,7 +78,7 @@ namespace fel{
 		buffer<node> band;
 	public:
 		unordered_map(std::size_t initial_size = 12)
-		: band(fel_config::memory_module::memory_allocator(sizeof(node)*initial_size), initial_size)
+		: band((node*)fel_config::memory_module::memory_allocator(sizeof(node)*initial_size), initial_size)
 		{
 			new(&band[0]) node[initial_size];
 		}
@@ -106,7 +101,8 @@ namespace fel{
 
 		void resize(std::size_t new_sz)
 		{
-			buffer<node> new_band(fel_config::memory_module::memory_allocator(sizeof(node)*new_sz), new_sz);
+			buffer<node> new_band((node*)fel_config::memory_module::memory_allocator(sizeof(node)*new_sz), new_sz);
+			new(&new_band[0]) node[new_sz];
 
 			for(auto elem : band)
 			{
@@ -136,6 +132,7 @@ namespace fel{
 			{
 				slot.band = h;
 				slot.ptr = p;
+				size++;
 				return;
 			} else {
 				slot.ptr->~pair<K,V>();

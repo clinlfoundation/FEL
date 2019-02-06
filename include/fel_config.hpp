@@ -13,5 +13,5 @@ namespace fel_config{
 			&& ( memory_deallocator != nullptr );
 	}
 
-	constexpr bool has_exceptions = false;
+	constexpr bool has_exceptions = true;
 }

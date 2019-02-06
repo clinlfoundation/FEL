@@ -3,6 +3,7 @@
 #include <typeinfo>
 #include <cstddef>
 #include <limits>
+#include "FEL/algorithm/min_max.hpp"
 
 
 namespace fel{
@@ -93,11 +94,11 @@ namespace fel{
 	};
 
 	template<typename T, typename U, typename ...rest>
-	constexpr T& max_size()
+	constexpr std::size_t max_size()
 	{
 		if constexpr (sizeof...(rest) == 0)
 		{
-			return ;
+			return max(sizeof(T),sizeof(U));
 		}
 		else
 		{
