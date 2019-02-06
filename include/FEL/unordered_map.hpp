@@ -17,7 +17,7 @@ namespace fel{
 			return cumul;
 		}
 		else if constexpr(std::is_floating_point<T>::value)
-			return (value+1/value)*32771.0L; // closest prime to 32768
+			return (value+1/value)*32771.0L; // closest prime to 32768 (source WolframAlpha)
 		else if constexpr(std::is_integral<T>::value)
 			return value;
 	}
@@ -40,11 +40,11 @@ namespace fel{
 		public:
 			void operator=(V value)
 			{
-				target->insert(key,value);
+				target->insert(std::move(key),value);
 			}
 			void operator=(V& value)
 			{
-				target->insert(key,value);
+				target->insert(std::move(key),value);
 			}
 			void operator=(V&& value)
 			{
