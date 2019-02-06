@@ -1,5 +1,5 @@
 CXX = clang++
-CXXFLAGS = --std=c++17 -g
+CXXFLAGS = --std=c++17 -O3
 INCLUDE = -I../include
 
 all: ./bin/test001.out ./bin/test002.out ./bin/test003.out ./bin/test004.out

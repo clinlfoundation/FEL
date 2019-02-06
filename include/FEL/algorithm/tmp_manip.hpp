@@ -129,4 +129,41 @@ namespace fel{
 	{
 		using type = T;
 	};
+
+	template<typename T>
+	struct has_begin_interface
+	{
+	private:
+		typedef std::true_type yes;
+		typedef std::false_type no;
+	
+		template<typename U, auto (U::*f)() const> struct SFINAE{};
+	
+	
+		template<class C> static yes test(SFINAE<C,&C::begin>*);
+		template<class C> static no test(...);
+	
+	public:
+		static constexpr bool value = std::is_same<yes,decltype(test<T>(nullptr))>::value;
+	};
+
+	template<typename T>
+	struct has_end_interface
+	{
+	private:
+		typedef std::true_type yes;
+		typedef std::false_type no;
+	
+		template<typename U, auto (U::*f)() const> struct SFINAE{};
+	
+	
+		template<class C> static yes test(SFINAE<C,&C::end>*);
+		template<class C> static no test(...);
+	
+	public:
+		static constexpr bool value = std::is_same<yes,decltype(test<T>(nullptr))>::value;
+	};
+
+	template<typename T>
+	using has_range_interface = constexpr_all_of<has_begin_interface<T>::value,has_end_interface<T>::value>;
 }

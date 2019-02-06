@@ -54,7 +54,7 @@ namespace fel{
 				return buffer_iterator{data-offset};
 			}
 
-			constexpr difference_type operator-(const buffer_iterator& oth)
+			constexpr difference_type operator-(const buffer_iterator& oth) const
 			{
 				return (T*)data-(T*)oth.data;
 			}
@@ -95,17 +95,17 @@ namespace fel{
 		, end_elem{beg_ptr+sz}
 		{}
 
-		constexpr typename buffer_iterator::difference_type size()
+		constexpr typename buffer_iterator::difference_type size() const
 		{
 			return end_elem - begin_elem;
 		}
 
-		constexpr associated_iterator begin()
+		constexpr associated_iterator begin() const
 		{
 			return begin_elem;
 		}
 
-		constexpr associated_iterator end()
+		constexpr associated_iterator end() const
 		{
 			return end_elem;
 		}

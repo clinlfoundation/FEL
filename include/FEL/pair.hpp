@@ -8,12 +8,6 @@ namespace fel{
 		F first;
 		S second;
 
-		pair(F v1, S v2)
-		{
-			first = v1;
-			second = v2;
-		}
-
 		pair(F& v1, S& v2)
 		{
 			first = v1;
@@ -32,9 +26,12 @@ namespace fel{
 			second = fel::move(v2);
 		}
 
-		pair operator=(pair oth) = default;
-
-		pair& operator=(pair& oth) = default;
+		pair<F,S>& operator=(pair& oth)
+		{
+			first = oth.first;
+			second = oth.second;
+			return *this;
+		}
 
 		void operator=(pair&& oth)
 		{
