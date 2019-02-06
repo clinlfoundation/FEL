@@ -16,6 +16,8 @@ namespace fel{
 				cumul += hash(elem);
 			return cumul;
 		}
+		else if constexpr(std::is_floating_point<T>::value)
+			return (value+1/value)*32771.0L; // closest prime to 32768
 		else if constexpr(std::is_integral<T>::value)
 			return value;
 	}
