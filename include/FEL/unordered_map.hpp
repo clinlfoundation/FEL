@@ -22,7 +22,23 @@ namespace fel{
 			return value;
 	}
 
-	template<typename K, typename V, typename I = std::enable_if_t<fel_config::memory_module::is_ok,int>>
+	template<typename I = std::enable_if_t<fel_config::memory_module::is_ok,int>>
+	class default_memory_allocator
+	{
+	public:
+		void* allocate(size_t sz)
+		{
+			return fel_config::memory_module::memory_allocator(sz);
+		}
+
+		void deallocate(void* ptr)
+		{
+			fel_config::memory_module::memory_deallocator(ptr);
+		}
+	};
+
+
+	template<typename K, typename V, typename large_memory_allocator = default_memory_allocator<>, typename node_memory_allocator = default_memory_allocator<>>
 	class unordered_map{
 		struct node{
 			uint64_t band = 0;
@@ -51,6 +67,8 @@ namespace fel{
 			return h;
 		}
 
+		large_memory_allocator lma{};
+		node_memory_allocator nma{};
 		std::size_t _size;
 		buffer<node> band;
 	public:
@@ -80,10 +98,13 @@ namespace fel{
 			}
 		};
 
-		unordered_map(std::size_t initial_size = 12)
-		: band((node*)fel_config::memory_module::memory_allocator(sizeof(node)*initial_size), initial_size)
+		unordered_map(std::size_t initial_capacity = 12, large_memory_allocator _lma = large_memory_allocator{}, node_memory_allocator _nma = node_memory_allocator{})
+		: lma{_lma}
+		, nma{_nma}
+		, _size{0}
+		, band((node*)lma.allocate(sizeof(node)*initial_capacity), initial_capacity)
 		{
-			new(&band[0]) node[initial_size];
+			new(&band[0]) node[initial_capacity];
 		}
 
 		~unordered_map()
@@ -93,10 +114,10 @@ namespace fel{
 				if(elem.ptr)
 				{
 					elem.ptr->~pair<K,V>();
-					fel_config::memory_module::memory_deallocator(elem.ptr);
+					nma.deallocate(elem.ptr);
 				}
 			}
-			fel_config::memory_module::memory_deallocator(&band[0]);
+			lma.deallocate(&band[0]);
 		}
 
 		constexpr std::size_t size() const
@@ -127,7 +148,7 @@ namespace fel{
 
 		void resize(std::size_t new_sz)
 		{
-			buffer<node> new_band((node*)fel_config::memory_module::memory_allocator(sizeof(node)*new_sz), new_sz);
+			buffer<node> new_band((node*)lma.allocate(sizeof(node)*new_sz), new_sz);
 			new(&new_band[0]) node[new_sz];
 
 			for(auto& elem : band)
@@ -141,14 +162,14 @@ namespace fel{
 				}
 			}
 
-			fel_config::memory_module::memory_deallocator(&band[0]);
+			lma.deallocate(&band[0]);
 			band = new_band;
 		}
 
 		template<typename tK, typename tV>
 		void insert(tK key,tV value)
 		{
-			fel::pair<K,V>* p = new(fel_config::memory_module::memory_allocator(sizeof(fel::pair<K,V>))) fel::pair<K,V>{fel::move(key),fel::move(value)};
+			fel::pair<K,V>* p = new(nma.allocate(sizeof(fel::pair<K,V>))) fel::pair<K,V>{fel::move(key),fel::move(value)};
 			auto h = hash(p->first);
 			if(_size*3/2>=band.size())
 				resize(band.size()*2);
@@ -162,7 +183,7 @@ namespace fel{
 				return;
 			} else {
 				slot.ptr->~pair<K,V>();
-				fel_config::memory_module::memory_deallocator(slot.ptr);
+				nma.deallocate(slot.ptr);
 				slot.ptr = p;
 				return;
 			}
