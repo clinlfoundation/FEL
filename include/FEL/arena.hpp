@@ -60,14 +60,17 @@ public:
 		}
 	}
 
-	bool desallocate(void* ptr)
+	bool deallocate(void* ptr)
 	{
-		if(data.contains(ptr))
+		if(data.contains((char*)ptr))
 		{
 			count--;
 			if(count==0)
 			{
-				memset(data.begin(),data.size(),0);
+				for(auto& i : data)
+				{
+					i=0;
+				}
 				last=0;
 			}
 			return true;
