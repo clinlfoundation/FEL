@@ -166,4 +166,43 @@ namespace fel{
 
 	template<typename T>
 	using has_range_interface = constexpr_all_of<has_begin_interface<T>::value,has_end_interface<T>::value>;
+
+
+
+	template<typename T>
+	struct has_allocate_interface
+	{
+	private:
+		typedef std::true_type yes;
+		typedef std::false_type no;
+	
+		template<typename U, void* (U::*f)(size_t) const> struct SFINAE{};
+	
+	
+		template<class C> static yes test(SFINAE<C,&C::allocate>*);
+		template<class C> static no test(...);
+	
+	public:
+		static constexpr bool value = std::is_same<yes,decltype(test<T>(nullptr))>::value;
+	};
+
+	template<typename T>
+	struct has_deallocate_interface
+	{
+	private:
+		typedef std::true_type yes;
+		typedef std::false_type no;
+	
+		template<typename U, void (U::*f)(void*) const> struct SFINAE{};
+	
+	
+		template<class C> static yes test(SFINAE<C,&C::deallocate>*);
+		template<class C> static no test(...);
+	
+	public:
+		static constexpr bool value = std::is_same<yes,decltype(test<T>(nullptr))>::value;
+	};
+
+	template<typename T>
+	using has_allocator_interface = constexpr_all_of<has_allocate_interface<T>::value,has_deallocate_interface<T>::value>;
 }

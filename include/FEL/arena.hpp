@@ -2,6 +2,7 @@
 #include "fel_config.hpp"
 #include "FEL/buffer.hpp"
 #include <type_traits>
+#include <FEL/algorithm/tmp_manip.hpp>
 /**
  *
  * Based of the code of buffer/arena.hpp from CLINL
@@ -10,8 +11,9 @@
  *
  */
 
-
+template<typename page_allocator>
 class arena{
+	page_allocator allocator;
 	fel::buffer<char> data;
 	size_t last;
 	size_t count;
@@ -22,7 +24,7 @@ public:
 	,data(fel::buffer<char>(nullptr,nullptr))
 	{}
 
-	template<typename T = std::enable_if<fel_config::memory_module::is_ok,int>::type>
+	template<typename T = typename std::enable_if<fel::has_allocator_interface<page_allocator>::value,int>::type>
 	arena(size_t sz)
 	:last(0)
 	,count(0)
@@ -30,7 +32,7 @@ public:
 	{
 		if(sz!=0)
 		{
-			auto v=fel_config::memory_module::memory_allocator(sz);
+			auto v=allocator.allocate(sz);
 			if(v!=nullptr)
 			{
 				data=fel::buffer<char>(reinterpret_cast<char*>(v),reinterpret_cast<char*>(v)+sz);
@@ -76,5 +78,13 @@ public:
 			return true;
 		}
 		return false;
+	}
+
+	~arena()
+	{
+		if constexpr(fel::has_allocator_interface<page_allocator>::value)
+		{
+			allocator.deallocate(&data[0]);
+		}
 	}
 };

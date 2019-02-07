@@ -74,4 +74,17 @@ namespace fel{
 			what_str = "bad_hashmap_access error has occured";
 		}
 	};
+
+	class bad_alloc : public runtime_error{
+		public:
+		bad_alloc(const char* what)
+		: runtime_error{what}
+		{}
+
+		bad_alloc()
+		: runtime_error{}
+		{
+			what_str = "bad_alloc error has occured";
+		}
+	};
 }
