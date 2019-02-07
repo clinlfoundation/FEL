@@ -22,9 +22,6 @@ namespace fel{
 			return value;
 	}
 
-
-	
-
 	template<typename K, typename V, typename I = std::enable_if_t<fel_config::memory_module::is_ok,int>>
 	class unordered_map{
 		struct node{
@@ -87,6 +84,19 @@ namespace fel{
 		: band((node*)fel_config::memory_module::memory_allocator(sizeof(node)*initial_size), initial_size)
 		{
 			new(&band[0]) node[initial_size];
+		}
+
+		~unordered_map()
+		{
+			for(auto& elem : band)
+			{
+				if(elem.ptr)
+				{
+					elem.ptr->~pair<K,V>();
+					fel_config::memory_module::memory_deallocator(elem.ptr);
+				}
+			}
+			fel_config::memory_module::memory_deallocator(&band[0]);
 		}
 
 		constexpr std::size_t size() const
