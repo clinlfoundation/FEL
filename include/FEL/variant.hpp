@@ -62,6 +62,7 @@ namespace fel{
 	class variant<typename std::enable_if<fel_config::memory_module::is_ok,default_memory_allocator<>>::type, T...>{
 		std::size_t index = std::numeric_limits<std::size_t>::max();
 		void* ptr;
+		auto dtor = [](void*){};
 	public:
 		template<typename U, typename std::enable_if<list_contains_class<U,T...>::value,int>::type>
 		constexpr variant(U& value)
@@ -75,6 +76,13 @@ namespace fel{
 		: index{r_index_of<U, T...>::value}
 		{
 			ptr = (void*)new U(std::move(value));
+		}
+
+
+
+		~variant()
+		{
+			
 		}
 
 		template<typename U>

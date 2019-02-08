@@ -90,6 +90,65 @@ namespace fel{
 			}
 		};
 
+		struct iterator
+		{
+			static constexpr iterator_type_t iterator_type = iterator_type_t::non_contiguous_iterator;
+			node* ptr;
+
+			constexpr iterator(node* orig)
+			: ptr{orig}
+			{}
+
+			iterator operator++()
+			{
+				do
+				{
+					ptr++;
+				}
+				while(ptr->ptr!=nullptr);
+				return iterator{ptr};
+			}
+			iterator operator++(int)
+			{
+				auto tmp = ptr;
+				do
+				{
+					ptr++;
+				}
+				while(ptr->ptr!=nullptr);
+				return iterator{ptr};
+			}
+			iterator operator--()
+			{
+				do
+				{
+					ptr--;
+				}
+				while(ptr->ptr!=nullptr);
+				return iterator{ptr};
+			}
+			iterator operator--(int)
+			{
+				auto tmp = ptr;
+				do
+				{
+					ptr--;
+				}
+				while(ptr->ptr!=nullptr);
+				return iterator{ptr};
+			}
+			bool operator==(iterator& oth)
+			{
+				return ptr==oth.ptr;
+			}
+			bool operator!=(iterator& oth)
+			{
+				return ptr!=oth.ptr;
+			}
+		};
+
+		using associated_iterator = iterator;
+
 		unordered_map(std::size_t initial_capacity = 12, large_memory_allocator _lma = large_memory_allocator{}, node_memory_allocator _nma = node_memory_allocator{})
 		: lma{_lma}
 		, nma{_nma}
@@ -110,6 +169,19 @@ namespace fel{
 				}
 			}
 			lma.deallocate(&band[0]);
+		}
+
+		iterator begin() const
+		{
+			auto start = &*band.begin();
+			if(start.ptr==nullptr)
+				return ++start;
+			return start;
+		}
+
+		iterator end() const
+		{
+			return &*band.end();
 		}
 
 		constexpr std::size_t size() const
@@ -140,8 +212,8 @@ namespace fel{
 
 		void resize(std::size_t new_sz)
 		{
-			buffer<node> new_band((node*)lma.allocate(sizeof(node)*new_sz), new_sz);
-			new(&new_band[0]) node[new_sz];
+			buffer<node> new_band((node*)lma.allocate(sizeof(node)*(new_sz+1)), new_sz);
+			new(&new_band[0]) node[new_sz+1];
 
 			for(auto& elem : band)
 			{
@@ -179,7 +251,6 @@ namespace fel{
 				slot.ptr = p;
 				return;
 			}
-
 		}
 
 		template<typename tK>

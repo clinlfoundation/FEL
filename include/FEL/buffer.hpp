@@ -14,7 +14,7 @@ namespace fel{
 			T* data;
 			typedef T value_type;
 			typedef std::size_t difference_type;
-			static constexpr iterator_type_t iterator_type = contiguous_iterator;
+			static constexpr iterator_type_t iterator_type = iterator_type_t::contiguous_iterator;
 
 			constexpr buffer_iterator(T* ptr)
 			: data{ptr}
@@ -83,7 +83,7 @@ namespace fel{
 		buffer_iterator begin_elem;
 		buffer_iterator end_elem;
 	public:
-		typedef buffer_iterator associated_iterator;
+		using associated_iterator = buffer_iterator;
 
 		constexpr buffer(T* beg_ptr, T* end_ptr)
 		: begin_elem{beg_ptr}
@@ -138,6 +138,8 @@ namespace fel{
 		buffer<T> data;
 		void(*deallocator)(void*);
 	public:
+		using associated_iterator = typename buffer<T>::associated_iterator;
+
 		unique_buffer(T* beg_ptr, T* end_ptr, void(deallocator_impl)(void*))
 		: data{beg_ptr,end_ptr}
 		, deallocator{deallocator_impl}

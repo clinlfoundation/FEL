@@ -93,6 +93,12 @@ namespace fel{
 		static constexpr std::size_t value = std::is_same<T, Univ>::value ? 0 : std::numeric_limits<std::size_t>::max();
 	};
 
+	template<size_t idx, typename T, typename ...rest>
+	struct r_index_at
+	{
+		using type = typename either<idx==sizeof...(rest),T,typename r_index_at<idx,rest...>::type>::type;
+	};
+
 	template<typename T, typename U, typename ...rest>
 	constexpr std::size_t max_size()
 	{

@@ -87,4 +87,17 @@ namespace fel{
 			what_str = "bad_alloc error has occured";
 		}
 	};
+
+	class bad_functor : public runtime_error{
+		public:
+		bad_functor(const char* what)
+		: runtime_error{what}
+		{}
+
+		bad_functor()
+		: runtime_error{}
+		{
+			what_str = "bad_functor error has occured";
+		}
+	};
 }
