@@ -5,6 +5,7 @@
 #include "fel_config.hpp"
 #include "FEL/exception.hpp"
 #include "FEL/memory.hpp"
+#include "FEL/function.hpp"
 
 
 namespace fel{
@@ -62,27 +63,57 @@ namespace fel{
 	class variant<typename std::enable_if<fel_config::memory_module::is_ok,default_memory_allocator<>>::type, T...>{
 		std::size_t index = std::numeric_limits<std::size_t>::max();
 		void* ptr;
-		auto dtor = [](void*){};
+		fel::function<void(void*)> dtor = [](void*){};
 	public:
 		template<typename U, typename std::enable_if<list_contains_class<U,T...>::value,int>::type>
 		constexpr variant(U& value)
 		: index{r_index_of<U, T...>::value}
 		{
-			ptr = (void*)new U(value);
+			ptr = (void*)new(default_memory_allocator<>{}.allocate(sizeof(U))) U(value);
+			dtor = fel::function([](void* thing){((U*)thing)->~U();});
 		}
 
 		template<typename U, typename std::enable_if<list_contains_class<U,T...>::value,int>::type>
 		constexpr variant(U&& value)
 		: index{r_index_of<U, T...>::value}
 		{
-			ptr = (void*)new U(std::move(value));
+			ptr = (void*)new(default_memory_allocator<>{}.allocate(sizeof(U))) U(std::move(value));
+			dtor = fel::function([](void* thing){((U*)thing)->~U();});
 		}
 
+		template<typename U, typename std::enable_if<list_contains_class<U,T...>::value,int>::type>
+		void operator=(U& value)
+		{
+			if(index != std::numeric_limits<std::size_t>::max())
+			{
+				dtor(ptr);
+				default_memory_allocator<>{}.deallocate(ptr);
+			}
+			index = r_index_of<U, T...>::value;
+			ptr = (void*)new(default_memory_allocator<>{}.allocate(sizeof(U))) U(value);
+			dtor = fel::function([](void* thing){((U*)thing)->~U();});
+		}
 
+		template<typename U, typename std::enable_if<list_contains_class<U,T...>::value,int>::type>
+		void operator=(U&& value)
+		{
+			if(index != std::numeric_limits<std::size_t>::max())
+			{
+				dtor(ptr);
+				default_memory_allocator<>{}.deallocate(ptr);
+			}
+			index = r_index_of<U, T...>::value;
+			ptr = (void*)new(default_memory_allocator<>{}.allocate(sizeof(U))) U(std::move(value));
+			dtor = fel::function([](void* thing){((U*)thing)->~U();});
+		}
 
 		~variant()
 		{
-			
+			if(index != std::numeric_limits<std::size_t>::max())
+			{
+				dtor(ptr);
+				default_memory_allocator<>{}.deallocate(ptr);
+			}
 		}
 
 		template<typename U>
