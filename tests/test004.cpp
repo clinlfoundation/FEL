@@ -15,7 +15,7 @@ int main(int argc, char** argv)
     std::mt19937 gen(rd());
 	std::uniform_int_distribution<int> dist{std::numeric_limits<int>::min(), std::numeric_limits<int>::max()};
 	
-	for(int loop = 10; loop<1200000; loop*=1.3)
+	for(int loop = 10; loop<1200000; loop*=2.7)
 	{
 		for(int tries = 0; tries < 10; tries++)
 		{

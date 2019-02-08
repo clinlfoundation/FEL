@@ -18,7 +18,14 @@ namespace fel{
 			return cumul;
 		}
 		else if constexpr(std::is_floating_point<T>::value)
-			return (value+1/value)*32771.0L; // closest prime to 32768 (source WolframAlpha)
+		{
+			if constexpr(sizeof(T)==2)
+				return *(uint16_t*)&value;
+			if constexpr(sizeof(T)==4)
+				return *(uint32_t*)&value;
+			if constexpr(sizeof(T)==8)
+				return *(uint64_t*)&value;
+		}
 		else if constexpr(std::is_integral<T>::value)
 			return value;
 	}
