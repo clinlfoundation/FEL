@@ -17,12 +17,14 @@ namespace fel{
 	class variant<typename std::enable_if<!fel_config::memory_module::is_ok && all_of_fixed_size<T...>::value,int>::type, T...>{
 		std::size_t index = std::numeric_limits<std::size_t>::max();
 		char buffer[max_size<T...>];
+		fel::function<void(void*)> dtor = [](void*){};
 	public:
 		template<typename U, typename std::enable_if<list_contains_class<U,T...>::value,int>::type>
 		constexpr variant(U& value)
 		: index{r_index_of<U, T...>::value}
 		{
 			new(buffer) U(value);
+			dtor = fel::function([](void* thing){((U*)thing)->~U();});
 		}
 
 		template<typename U, typename std::enable_if<list_contains_class<U,T...>::value,int>::type>
@@ -30,6 +32,41 @@ namespace fel{
 		: index{r_index_of<U, T...>::value}
 		{
 			new(buffer) U(std::move(value));
+			dtor = fel::function([](void* thing){((U*)thing)->~U();});
+		}
+
+
+
+		template<typename U, typename std::enable_if<list_contains_class<U,T...>::value,int>::type>
+		void operator=(U& value)
+		{
+			if(index != std::numeric_limits<std::size_t>::max())
+			{
+				dtor((void*)buffer);
+			}
+			index = r_index_of<U, T...>::value;
+			new(buffer) U(value);
+			dtor = fel::function([](void* thing){((U*)thing)->~U();});
+		}
+
+		template<typename U, typename std::enable_if<list_contains_class<U,T...>::value,int>::type>
+		void operator=(U&& value)
+		{
+			if(index != std::numeric_limits<std::size_t>::max())
+			{
+				dtor((void*)buffer);
+			}
+			index = r_index_of<U, T...>::value;
+			new(buffer) U(std::move(value));
+			dtor = fel::function([](void* thing){((U*)thing)->~U();});
+		}
+
+		~variant()
+		{
+			if(index != std::numeric_limits<std::size_t>::max())
+			{
+				dtor((void*)buffer);
+			}
 		}
 
 		template<typename U>
