@@ -4,6 +4,7 @@
 #include "FEL/pair.hpp"
 #include "FEL/memory.hpp"
 #include "FEL/algorithm/tmp_manip.hpp"
+#include "FEL/algorithm/copy.hpp"
 #include <type_traits>
 
 namespace fel{
@@ -221,7 +222,7 @@ namespace fel{
 				{
 					auto offset = find_free_key_slot(elem.ptr->first, new_band);
 					auto& slot = new_band[offset];
-					slot.band = hash(elem.ptr->first);
+					slot.band = elem.band;
 					slot.ptr = elem.ptr;
 				}
 			}
@@ -275,6 +276,51 @@ namespace fel{
 				}
 			}
 			return slot.ptr->second;
+		}
+
+		auto diagnose(buffer<char> i_buf)
+		{
+			auto stream = nameless_range<typename buffer<char>::associated_iterator>(i_buf.begin(), i_buf.end());
+			size_t displacements = 0;
+			size_t max_displacement = 0;
+			size_t tmp = 0;
+			for(size_t i = 0; i<band.size(); i++)
+			{
+				const auto& elem = *(band.begin()+i);
+				if(elem.ptr != nullptr)
+				{
+					size_t normal = elem.band % band.size();
+					size_t actual = i;
+					size_t displacement = (normal < actual ? actual - normal : band.size() + actual - normal) % band.size();
+					displacements += displacement;
+					max_displacement = fel::max(max_displacement, displacement);
+				}
+			}
+			auto text0 = "unordered_map statistics:\n\tband_size: ";
+			auto btext0 = buffer{text0,text0+38};
+			auto text1 = "\n\tsize: ";
+			auto btext1 = buffer{text1,text1+8};
+			auto text2 = "\n\tdisplacements: ";
+			auto btext2 = buffer{text2,text2+17};
+			auto text3 = "\n\tmax displacement: ";
+			auto btext3 = buffer{text3,text3+20};
+			stream = fel::copy(btext0, stream);
+
+			stream = fel::copy(std::to_string(band.size()),stream);
+
+			stream = fel::copy(btext1, stream);
+
+			stream = fel::copy(std::to_string(size()),stream);
+
+			stream = fel::copy(btext2, stream);
+			
+			stream = fel::copy(std::to_string((double)displacements/(double)size()),stream);
+
+			stream = fel::copy(btext3, stream);
+			
+			stream = fel::copy(std::to_string(max_displacement),stream);
+
+			return stream;
 		}
 	};
 }

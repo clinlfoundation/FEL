@@ -23,7 +23,7 @@ namespace fel{
 		}
 		else
 		{
-			return max(first < second ? first : second, args...);
+			return min(first < second ? first : second, args...);
 		}
 	}
 }

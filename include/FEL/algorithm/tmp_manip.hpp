@@ -137,6 +137,23 @@ namespace fel{
 	};
 
 	template<typename T>
+	struct has_size_interface
+	{
+	private:
+		typedef std::true_type yes;
+		typedef std::false_type no;
+	
+		template<typename U, size_t (U::*f)() const> struct SFINAE{};
+	
+	
+		template<class C> static yes test(SFINAE<C,&C::size>*);
+		template<class C> static no test(...);
+	
+	public:
+		static constexpr bool value = std::is_same<yes,decltype(test<T>(nullptr))>::value;
+	};
+
+	template<typename T>
 	struct has_begin_interface
 	{
 	private:
@@ -172,6 +189,9 @@ namespace fel{
 
 	template<typename T>
 	using has_range_interface = constexpr_all_of<has_begin_interface<T>::value,has_end_interface<T>::value>;
+
+	template<typename T>
+	using has_measurable_range_interface = constexpr_all_of<has_range_interface<T>::value,has_size_interface<T>::value>;
 
 
 

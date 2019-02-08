@@ -1,2 +1,3 @@
 tests/bin/*
 tests/bench.csv
+tests/bench02.csv

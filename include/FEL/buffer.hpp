@@ -16,6 +16,10 @@ namespace fel{
 			typedef std::size_t difference_type;
 			static constexpr iterator_type_t iterator_type = iterator_type_t::contiguous_iterator;
 
+			constexpr buffer_iterator(const buffer_iterator& oth)
+			: data{oth.data}
+			{}
+
 			constexpr buffer_iterator(T* ptr)
 			: data{ptr}
 			{}

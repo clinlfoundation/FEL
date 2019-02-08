@@ -15,7 +15,7 @@ int main(int argc, char** argv)
     std::mt19937 gen(rd());
 	std::uniform_int_distribution<int> dist{std::numeric_limits<int>::min(), std::numeric_limits<int>::max()};
 	
-	for(int loop = 10; loop<1200000; loop*=2.7)
+	for(int loop = 10; loop<1200000; loop*=2.4)
 	{
 		for(int tries = 0; tries < 10; tries++)
 		{
@@ -62,9 +62,20 @@ int main(int argc, char** argv)
 			}
 			end = std::chrono::high_resolution_clock::now();
 			std::cout<<"\t"<<std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count()/ctrl.size()<<std::endl;
+
+			char buff[2048];
+			fel::buffer<char> as_buff{buff, buff+2048};
+
+			auto range = my_map.diagnose(as_buff);
+			for(auto c : fel::nameless_range<typename fel::buffer<char>::associated_iterator>{as_buff.begin(), range.begin()})
+			{
+				std::cerr<<c;
+			}
+			std::cerr<<std::endl;
 		}
 	}
 	/////////////////////////////////////////////
+
 
 	std::ofstream{argv[fail?2:1]}<<"{\"pass\":"<<pass<<",\"fail\":"<<fail<<"}";
 	return 0;
