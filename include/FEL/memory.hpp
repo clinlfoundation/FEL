@@ -1,7 +1,6 @@
 #pragma once
 #include "fel_config.hpp"
 #include <type_traits>
-#include "FEL/arena.hpp"
 
 namespace fel{
 	template<typename I = std::enable_if_t<fel_config::memory_module::is_ok,int>>
