@@ -1,5 +1,12 @@
 # Freestanding Extentions Library
 
+## Supported compilers
+
+* GCC > 8
+* Clang > 5
+* MSVC++ 2018 (must support C++17)
+  * require heavy config file tweaking
+
 ## Iterators and ranges
 
 3 types of iterators:
