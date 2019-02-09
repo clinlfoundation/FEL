@@ -11,7 +11,7 @@
  *
  */
 
-template<typename page_allocator>
+template<typename page_allocator, size_t align = 1>
 class arena{
 	page_allocator allocator;
 	fel::buffer<char> data;
@@ -49,12 +49,20 @@ public:
 
 	void* allocate(size_t sz)
 	{
-		auto ret=data.begin()+last;
+		[[maybe_unused]]
+		size_t mod = 0;
+
+		if constexpr (align != 1)
+		{
+			mod = align - ((intptr_t)data.begin())%align;
+		}
+
+		auto ret=data.begin()+last+mod;
 		if(data.contains(ret))
 		{
 			count++;
-			last+=sz;
-			return &*ret;
+			last+=sz+mod;
+			return &*(ret);
 		}
 		else
 		{
