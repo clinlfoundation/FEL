@@ -1,6 +1,5 @@
 #pragma once
 #include "FEL/algorithm/tmp_manip.hpp"
-#include "FEL/algorithm/move.hpp"
 
 namespace fel{
 	template<typename it, bool Enable = std::is_same<typename it::difference_type,std::size_t>::value>

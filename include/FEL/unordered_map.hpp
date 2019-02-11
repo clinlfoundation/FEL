@@ -5,6 +5,7 @@
 #include "FEL/memory.hpp"
 #include "FEL/algorithm/tmp_manip.hpp"
 #include "FEL/algorithm/copy.hpp"
+#include "FEL/range/display_ranges.hpp"
 #include <type_traits>
 
 namespace fel{
@@ -306,11 +307,11 @@ namespace fel{
 			auto btext3 = buffer{text3,text3+20};
 			stream = fel::copy(btext0, stream);
 
-			stream = fel::copy(std::to_string(band.size()),stream);
+			stream = fel::copy(display_range{band.size()},stream);
 
 			stream = fel::copy(btext1, stream);
 
-			stream = fel::copy(std::to_string(size()),stream);
+			stream = fel::copy(display_range{size()},stream);
 
 			stream = fel::copy(btext2, stream);
 			
@@ -318,7 +319,7 @@ namespace fel{
 
 			stream = fel::copy(btext3, stream);
 			
-			stream = fel::copy(std::to_string(max_displacement),stream);
+			stream = fel::copy(display_range{max_displacement},stream);
 
 			return stream;
 		}
