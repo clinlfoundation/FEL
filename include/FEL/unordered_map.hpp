@@ -315,7 +315,7 @@ namespace fel{
 
 			stream = fel::copy(btext2, stream);
 			
-			stream = fel::copy(std::to_string((double)displacements/(double)size()),stream);
+			stream = fel::copy(display_range{(double)displacements/(double)size()},stream);
 
 			stream = fel::copy(btext3, stream);
 			
