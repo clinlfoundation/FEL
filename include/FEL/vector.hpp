@@ -23,6 +23,11 @@ namespace fel{
 			return backend.begin();
 		}
 
+		auto operator[] (std::size_t off)
+		{
+			return backend[off];
+		}
+
 		constexpr associated_iterator end() const
 		{
 			return backend.begin()+sz;
