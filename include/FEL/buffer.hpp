@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <FEL/optional.hpp>
 #include <FEL/iterator.hpp>
+#include <FEL/function.hpp>
 
 namespace fel{
 
@@ -140,11 +141,11 @@ namespace fel{
 	template<typename T>
 	class unique_buffer final{
 		buffer<T> data;
-		void(*deallocator)(void*);
+		fel::function<void(void*)> deallocator;
 	public:
 		using associated_iterator = typename buffer<T>::associated_iterator;
 
-		unique_buffer(T* beg_ptr, T* end_ptr, void(deallocator_impl)(void*))
+		unique_buffer(T* beg_ptr, T* end_ptr, fel::function<void(void*)> deallocator_impl)
 		: data{beg_ptr,end_ptr}
 		, deallocator{deallocator_impl}
 		{}
