@@ -9,6 +9,18 @@ namespace fel{
 		return (typename fel::remove_reference<T>::type&&)value;
 	}
 
+	template <class T> 
+	constexpr T&& forward(typename fel::remove_reference<T>::type& t) noexcept
+	{
+		return static_cast<T&&>(t);
+	}
+	template <class T> 
+	constexpr T&& forward(typename fel::remove_reference<T>::type&& t) noexcept
+	{
+		static_assert(!std::is_lvalue_reference_v<T>,"bad forward of rvalue as lvalue");
+		return static_cast<T&&>(t);
+	}
+
 	template<typename range_in, typename range_out>
 	range_out move(range_in src, range_out dest)
 	{
