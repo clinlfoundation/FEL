@@ -35,4 +35,19 @@ namespace fel{
 		}
 		return nameless_range<typename range_out::associated_iterator>{out, dest.end()};
 	}
+
+	template<typename T, typename range_in, typename range_out>
+	range_out move_uninitilized(range_in src, range_out dest)
+	{
+		if(src.size()>dest.size())
+			return dest;
+		auto in = src.begin();
+		auto in_close = src.end();
+		auto out = dest.begin();
+		while(in != in_close)
+		{
+			new(&*(out++)) T{fel::move(*(in++))};
+		}
+		return nameless_range<typename range_out::associated_iterator>{out, dest.end()};
+	}
 }

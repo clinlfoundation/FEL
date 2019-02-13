@@ -279,7 +279,7 @@ namespace fel{
 			return slot.ptr->second;
 		}
 
-		auto diagnose(buffer<char> i_buf)
+		auto diagnose(buffer<char> i_buf) const
 		{
 			auto stream = nameless_range<typename buffer<char>::associated_iterator>(i_buf.begin(), i_buf.end());
 			size_t displacements = 0;
