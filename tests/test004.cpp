@@ -2,6 +2,7 @@
 #include <iostream>
 #include <random>
 #include <FEL/unordered_map.hpp>
+#include <FEL/vector.hpp>
 #include <unordered_map>
 #include <string>
 #include <vector>
@@ -21,7 +22,7 @@ int main(int argc, char** argv)
 		{
 			fel::unordered_map<int, std::string> my_map;
 			std::unordered_map<int, std::string> std_map;
-			std::vector<int> ctrl;
+			fel::vector<int> ctrl;
 			for(int i = 0; i < loop; i++)
 			{
 				int v = dist(gen);

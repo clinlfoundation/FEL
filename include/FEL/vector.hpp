@@ -3,6 +3,7 @@
 #include "FEL/buffer.hpp"
 #include "FEL/algorithm/min_max.hpp"
 #include "FEL/algorithm/move.hpp"
+#include "FEL/algorithm/destroy.hpp"
 namespace fel{
 
 	template<typename T, typename allocator = fel::default_memory_allocator<>>
@@ -15,8 +16,16 @@ namespace fel{
 		using associated_iterator = typename fel::buffer<T>::associated_iterator;
 
 		vector(std::size_t _sz = 12)
-		: backend{alloc.allocate(_sz*sizeof(T)), _sz}
+		: backend{(T*)alloc.allocate(_sz*sizeof(T)), _sz}
 		{}
+
+		~vector()
+		{
+			auto to_clear = nameless_range<associated_iterator>{begin(),end()};
+			destroy_range<T>(to_clear);
+			void* ptr = (void*)&*backend.begin();
+			alloc.deallocate(ptr);
+		}
 
 		constexpr associated_iterator begin() const
 		{
@@ -46,8 +55,8 @@ namespace fel{
 		void resize(std::size_t new_sz)
 		{
 			new_sz = fel::max(sz, new_sz);
-			auto new_backend = fel::buffer<T>{alloc.allocate(new_sz*sizeof(T)), new_sz};
-			fel::move_uninitilized<T>(backend, new_backend);
+			auto new_backend = fel::buffer<T>{(T*)alloc.allocate(new_sz*sizeof(T)), new_sz};
+			fel::move_uninitialized<T>(backend, new_backend);
 			void* ptr = (void*)&*backend.begin();
 			backend = new_backend;
 			alloc.deallocate(ptr);
@@ -56,12 +65,17 @@ namespace fel{
 		template<typename U>
 		void push_back(const U& value)
 		{
-			if(sz<backend.size())
+			if(sz+1>backend.size())
 			{
 				resize(backend.size()*1.5f);
 			}
-			new(&*end()) T(fel::forward(value));
+			new(&*end()) T(value);
 			++sz;
+		}
+
+		typename fel::remove_reference<T>::type&& pop_back()
+		{
+			return fel::forward<T>(operator[](--sz));
 		}
 	};
 }
