@@ -60,7 +60,7 @@ namespace fel{
 			{
 				resize(backend.size()*1.5f);
 			}
-			*end() = fel::forward(value);
+			new(&*end()) T(fel::forward(value));
 			++sz;
 		}
 	};
