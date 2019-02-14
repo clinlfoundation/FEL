@@ -19,12 +19,41 @@ namespace fel{
 		: backend{(T*)alloc.allocate(_sz*sizeof(T)), _sz}
 		{}
 
+		vector(const vector& vec)
+		: backend{(T*)alloc.allocate(vec.size()*sizeof(T)), vec.size()}
+		{
+			for(auto& elem : vec)
+				push_back(elem);
+		}
+
+		vector(vector&& vec)
+		{
+			backend = vec.backend;
+			vec.backend = buffer<T>{nullptr, 0};
+		}
+
+		vector& operator=(const vector& vec)
+		{
+			this->~vector();
+			new(this) vector(vec);
+			return *this;
+		}
+
+		vector& operator=(vector&& vec)
+		{
+			fel::swap(backend, vec.backend);
+			fel::swap(sz, vec.sz);
+		}
+
 		~vector()
 		{
-			auto to_clear = nameless_range<associated_iterator>{begin(),end()};
-			destroy_range<T>(to_clear);
-			void* ptr = (void*)&*backend.begin();
-			alloc.deallocate(ptr);
+			if(capacity())
+			{
+				auto to_clear = nameless_range<associated_iterator>{begin(),end()};
+				destroy_range<T>(to_clear);
+				void* ptr = (void*)&*backend.begin();
+				alloc.deallocate(ptr);
+			}
 		}
 
 		constexpr associated_iterator begin() const

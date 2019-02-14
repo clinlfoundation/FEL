@@ -9,16 +9,27 @@ namespace fel{
 		return (typename fel::remove_reference<T>::type&&)value;
 	}
 
-	template <class T> 
+	template<typename T> 
 	constexpr T&& forward(typename fel::remove_reference<T>::type& t) noexcept
 	{
 		return static_cast<T&&>(t);
 	}
-	template <class T> 
+	template<typename T> 
 	constexpr T&& forward(typename fel::remove_reference<T>::type&& t) noexcept
 	{
 		static_assert(!std::is_lvalue_reference_v<T>,"bad forward of rvalue as lvalue");
 		return static_cast<T&&>(t);
+	}
+
+	template<typename T>
+	constexpr void swap(
+		typename fel::remove_reference<T>::type& lhs,
+		typename fel::remove_reference<T>::type& rhs
+	)
+	{
+		auto tmp = fel::move(lhs);
+		lhs = fel::move(rhs);
+		rhs = fel::move(tmp);
 	}
 
 	template<typename range_in, typename range_out>

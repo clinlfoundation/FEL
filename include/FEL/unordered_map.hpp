@@ -9,17 +9,19 @@
 #include <type_traits>
 
 namespace fel{
+	template<typename T, typename Enable = void>
+	struct hash;
+
 	template<typename T>
-	uint64_t hash(const T& value)
-	{
-		if constexpr(has_range_interface<T>::value)
+	struct hash<T, std::enable_if_t<std::is_integral_v<T>, void>>{
+		constexpr uint64_t operator()(const T& value) const 
 		{
-			uint64_t cumul = 0;
-			for(auto elem : value)
-				cumul += hash(elem);
-			return cumul;
+			return value;
 		}
-		else if constexpr(std::is_floating_point<T>::value)
+	};
+	template<typename T>
+	struct hash<T, std::enable_if_t<std::is_floating_point_v<T>, void>>{
+		constexpr uint64_t operator()(const T& value) const 
 		{
 			if constexpr(sizeof(T)==2)
 				return *(uint16_t*)&value;
@@ -28,11 +30,23 @@ namespace fel{
 			if constexpr(sizeof(T)==8)
 				return *(uint64_t*)&value;
 		}
-		else if constexpr(std::is_integral<T>::value)
-			return value;
-	}
+	};
+	template<typename T>
+	struct hash<T, std::enable_if_t<has_range_interface<T>::value, void>>{
+		constexpr uint64_t operator()(const T& value) const 
+		{
+			uint64_t cumul = 0;
+			for(auto elem : value)
+			{
+				cumul++;
+				cumul<<=1;
+				cumul += hash(elem);
+			}
+			return cumul;
+		}
+	};
 
-	template<typename K, typename V, typename large_memory_allocator = default_memory_allocator<>, typename node_memory_allocator = default_memory_allocator<>>
+	template<typename K, typename V, typename hash_type = fel::hash<K>, typename large_memory_allocator = default_memory_allocator<>, typename node_memory_allocator = default_memory_allocator<>>
 	class unordered_map{
 		struct node{
 			uint64_t band = 0;
@@ -61,6 +75,7 @@ namespace fel{
 			return h;
 		}
 
+		constexpr static hash_type hash{};
 		large_memory_allocator lma{};
 		node_memory_allocator nma{};
 		std::size_t _size;
