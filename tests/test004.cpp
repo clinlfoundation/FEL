@@ -2,6 +2,7 @@
 #include <iostream>
 #include <random>
 #include <FEL/unordered_map.hpp>
+#include <FEL/unordered_set.hpp>
 #include <FEL/vector.hpp>
 #include <unordered_map>
 #include <string>
@@ -21,12 +22,14 @@ int main(int argc, char** argv)
 		for(int tries = 0; tries < 10; tries++)
 		{
 			fel::unordered_map<int, std::string> my_map;
+			fel::unordered_set<int> my_set;
 			std::unordered_map<int, std::string> std_map;
 			fel::vector<int> ctrl;
 			for(int i = 0; i < loop; i++)
 			{
 				int v = dist(gen);
 				ctrl.push_back(v);
+				my_set.insert(v);
 				my_map[v]=std::to_string(v);
 				std_map[v]=std::to_string(v);
 			}

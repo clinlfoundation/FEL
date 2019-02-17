@@ -8,6 +8,11 @@ namespace fel{
 	public:
 		using associated_iterator = typename buffer<T>::associated_iterator;
 
+		constexpr T& operator[] (size_t off)
+		{
+			return ary[off];
+		}
+
 		constexpr size_t size() const
 		{
 			return sz;

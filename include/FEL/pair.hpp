@@ -26,6 +26,9 @@ namespace fel{
 			second = fel::move(v2);
 		}
 
+		pair(const pair&) = default;
+		pair(pair&&) = default;
+
 		pair<F,S>& operator=(pair& oth)
 		{
 			first = oth.first;

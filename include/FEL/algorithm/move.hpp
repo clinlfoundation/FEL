@@ -23,13 +23,13 @@ namespace fel{
 
 	template<typename T>
 	constexpr void swap(
-		typename fel::remove_reference<T>::type& lhs,
-		typename fel::remove_reference<T>::type& rhs
+		T& lhs,
+		T& rhs
 	)
 	{
-		auto tmp = fel::move(lhs);
-		lhs = fel::move(rhs);
-		rhs = fel::move(tmp);
+		auto tmp = lhs;
+		lhs = rhs;
+		rhs = tmp;
 	}
 
 	template<typename range_in, typename range_out>
