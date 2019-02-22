@@ -72,6 +72,38 @@ namespace fel{
 			return *this;
 		}
 
+		template <typename T>
+		function(T t) 
+		{
+			if constexpr (sizeof(callable<T>) <= sizeof(self))
+			{
+				new((void*)&self) callable(t);
+				state = ACTIVE | SOO;
+			}
+			else
+			{
+				self = new callable(t);
+				state = ACTIVE | NO_SOO;
+			}
+			return *this;
+		}
+
+		template <typename T>
+		function(T& t) 
+		{
+			if constexpr (sizeof(callable<T>) <= sizeof(self))
+			{
+				new((void*)&self) callable(t);
+				state = ACTIVE | SOO;
+			}
+			else
+			{
+				self = new callable(t);
+				state = ACTIVE | NO_SOO;
+			}
+			return *this;
+		}
+
 		ret operator()(args... arg_list) const {
 			if(fel_config::has_exceptions)
 			{

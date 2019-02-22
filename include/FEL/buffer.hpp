@@ -4,6 +4,7 @@
 #include <FEL/optional.hpp>
 #include <FEL/iterator.hpp>
 #include <FEL/function.hpp>
+#include <FEL/algorithm/move.hpp>
 
 namespace fel{
 
@@ -20,7 +21,7 @@ namespace fel{
 			constexpr buffer_iterator(const buffer_iterator& oth)
 			: data{oth.data}
 			{}
-
+ 
 			constexpr buffer_iterator(T* ptr)
 			: data{ptr}
 			{}
@@ -160,6 +161,12 @@ namespace fel{
 			oth.data=buffer<T>{nullptr,nullptr};
 		}
 
+		void operator=(unique_buffer&& oth)
+		{
+			fel::swap(data, oth.data);
+			fel::swap(deallocator, oth.deallocator);
+		}
+
 		~unique_buffer()
 		{
 			if(!data.contains(nullptr))
@@ -180,6 +187,11 @@ namespace fel{
 		constexpr auto end()
 		{
 			return data.end();
+		}
+
+		constexpr auto size()
+		{
+			return data.size();
 		}
 
 		constexpr T& operator[](std::size_t offset)
