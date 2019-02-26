@@ -324,6 +324,32 @@ namespace fel{
 			}
 		}
 
+#ifdef FEL_UNORDERED_MAP
+		void remove(K& key)
+#elif defined(FEL_UNORDERED_SET)
+		void remove(V& key)
+#endif 
+		{
+#ifdef FEL_UNORDERED_MAP
+			auto off = find_free_key_slot(key, band);
+#elif defined(FEL_UNORDERED_SET)
+			auto off = find_free_key_slot(key, band);
+#endif
+			auto& slot = band[off];
+			if(slot.ptr!=nullptr)
+			{
+#ifdef FEL_UNORDERED_MAP
+				slot.ptr->~pair<K,V>();
+#elif defined(FEL_UNORDERED_SET)
+				slot.ptr->~V();
+#endif
+				nma.deallocate(slot.ptr);
+				slot.ptr = nullptr;
+				resize(bucket_count());
+			}
+		}
+
+
 		template<typename tK>
 		typename fel::either<
 			fel_config::has_exceptions,
