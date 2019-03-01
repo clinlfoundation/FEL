@@ -26,6 +26,11 @@ namespace fel{
 			: data{ptr}
 			{}
 
+			constexpr operator T&()
+			{
+				return *data;
+			}
+
 			constexpr T& operator*(){
 				return *data;
 			}

@@ -2,6 +2,7 @@
 #include <FEL/_tools/_unix/fs_primitives.hpp>
 #include <FEL/memory.hpp>
 #include <FEL/unordered_map.hpp>
+#include <FEL/range/constant_range.hpp>
 
 namespace fel
 {
@@ -182,7 +183,46 @@ namespace fel
 			READ, WRITE, EXECUTE, UPDATE
 		};
 
-		constexpr bool has_permissions(const userinfo_t& user, const file_t& file, const access_t& type) const
+	public:
+		constexpr static permissions_t defaults_files{
+			.user=permissions_t::triplet_t{
+				.read=true,
+				.write=true,
+				.execute=false
+			},
+			.group=permissions_t::triplet_t{
+				.read=true,
+				.write=true,
+				.execute=false
+			},
+			.other=permissions_t::triplet_t{
+				.read=false,
+				.write=false,
+				.execute=false
+			},
+			.directory=false
+		};
+		constexpr static permissions_t defaults_directories{
+			.user=permissions_t::triplet_t{
+				.read=true,
+				.write=true,
+				.execute=false
+			},
+			.group=permissions_t::triplet_t{
+				.read=true,
+				.write=true,
+				.execute=false
+			},
+			.other=permissions_t::triplet_t{
+				.read=false,
+				.write=false,
+				.execute=false
+			},
+			.directory=false
+		};
+	private:
+
+		[[nodiscard]] constexpr bool has_permissions(const userinfo_t& user, const file_t& file, const access_t& type) const
 		{
 			switch(type)
 			{
@@ -209,52 +249,100 @@ namespace fel
 			}
 		}
 
+		[[nodiscard]] file_t set_permissions(const userinfo_t& user, file_t file) const
+		{
+			file.suid = user.first;
+			file.guid = user.second.begin();
+			if(file.is_directory)
+			{
+				file.rights=defaults_directories;
+			}
+			else
+			{
+				file.rights=defaults_files;
+			}
+		}
+
+
 	public:
+
 
 		sramfs(allocator _alloc = allocator{})
 		: alloc{_alloc}
 		{
 			root = mkdir(sramfs_root_name);
+			root.is_special = true;
+		}
+
+		/* Returns a pointer to badfile on failure */
+		virtual file_t* open(const buffer<char>& path, const userinfo_t userinfo)
+		{
+			auto cpy = path;
+			file_t* explorer = &root;
+			file_t::fn_t filename={};
+			while(path.begin()=='/')
+			{
+				cpy = fel::buffer<char>{&*(++cpy.begin()), &*cpy.end()};
+			}
+			do{
+				if(!has_permissions(userinfo, *explorer, access_t::READ)) return &fel::badfile;
+
+				auto fname = fel::filesystem::split_path(cpy);
+				auto map = reinterpret_cast<directory_data*>(explorer->locator);
+
+				fel::copy(
+					fel::constant_range<char>('\0'),
+					fel::copy(fname.first, filename)
+				);
+				
+				explorer = &(map->get_or(filename, fel::badfile));
+				if(
+					explorer == &fel::badfile
+					|| fname.second.size() == 0
+				)
+				{
+					return explorer;
+				}
+				else
+				{
+					cpy = fname.second;
+				}
+			}while(explorer);
+			return &fel::badfile;
 		}
 
 		/* Returns 0 on success */
-		virtual file_t open(const buffer<char>& path, const userinfo_t userinfo)
+		virtual int64_t create(file_t* locator, file_t file, const userinfo_t userinfo)
 		{
 
 		}
 
 		/* Returns 0 on success */
-		virtual int64_t create(file_t locator, file_t file, const userinfo_t userinfo)
-		{
-
-		}
-
-		/* Returns 0 on success */
-		virtual int64_t update(file_t file, const userinfo_t userinfo)
+		virtual int64_t update(file_t* file, const userinfo_t userinfo)
 		{
 
 		}
 
 		/* Returns a number of found files on success */
-		virtual int64_t list(file_t file, fel::buffer<file_t>& data, const userinfo_t userinfo)
+		virtual int64_t list(file_t* file, fel::buffer<file_t>& data, const userinfo_t userinfo)
 		{
 
 		}
 
 		/* Returns a number of byte read on success */
-		virtual int64_t read(file_t locator, uint64_t offset, fel::buffer<char>& data, const userinfo_t userinfo)
+		virtual int64_t read(file_t* locator, uint64_t offset, fel::buffer<char>& data, const userinfo_t userinfo)
 		{
 
 		}
 
 		/* Returns a number of byte written on success */
-		virtual int64_t write(file_t locator, uint64_t offset, fel::buffer<char>& data, const userinfo_t userinfo)
+		virtual int64_t write(file_t* locator, uint64_t offset, fel::buffer<char>& data, const userinfo_t userinfo)
 		{
 
 		}
 
 		/* Returns 0 on success */
-		virtual int64_t remove(file_t locator, file_t file, const userinfo_t userinfo)
+		virtual int64_t remove(file_t* locator, file_t file, const userinfo_t userinfo)
 		{
 
 		}

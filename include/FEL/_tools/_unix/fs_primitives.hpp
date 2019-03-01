@@ -58,25 +58,52 @@ namespace fel{
 
 	struct filesystem
 	{
-		/* Returns 0 on success */
-		virtual file_t open(const buffer<char>& path, const userinfo_t userinfo) = 0;
+		static fel::pair<fel::buffer<char>, fel::buffer<char>> split_path(fel::buffer<char>& path)
+		{
+			for(
+				auto it = path.begin();
+				it != path.end();
+				++it
+
+			)
+			{
+				if(*it == '/')
+				{
+					auto current_part = fel::buffer<char>{
+						&*path.begin(),
+						&*it
+					};
+					auto pass_part = fel::buffer<char>{
+						&*(++it),
+						&*path.end()
+					};
+					return fel::pair{current_part, pass_part};
+				}
+			}
+			return fel::pair{
+				path, fel::buffer<char>{nullptr, (size_t)0}
+			};
+		}
 
 		/* Returns 0 on success */
-		virtual int64_t create(file_t locator, file_t file, const userinfo_t userinfo) = 0;
+		virtual file_t* open(const buffer<char>& path, const userinfo_t userinfo) = 0;
 
 		/* Returns 0 on success */
-		virtual int64_t update(file_t file, const userinfo_t userinfo) = 0;
+		virtual int64_t create(file_t* locator, file_t file, const userinfo_t userinfo) = 0;
+
+		/* Returns 0 on success */
+		virtual int64_t update(file_t* file, const userinfo_t userinfo) = 0;
 
 		/* Returns a number of found files on success */
-		virtual int64_t list(file_t file, fel::buffer<file_t>& data, const userinfo_t userinfo) = 0;
+		virtual int64_t list(file_t* file, fel::buffer<file_t>& data, const userinfo_t userinfo) = 0;
 
 		/* Returns a number of byte read on success */
-		virtual int64_t read(file_t locator, uint64_t offset, fel::buffer<char>& data, const userinfo_t userinfo) = 0;
+		virtual int64_t read(file_t* locator, uint64_t offset, fel::buffer<char>& data, const userinfo_t userinfo) = 0;
 
 		/* Returns a number of byte written on success */
-		virtual int64_t write(file_t locator, uint64_t offset, fel::buffer<char>& data, const userinfo_t userinfo) = 0;
+		virtual int64_t write(file_t* locator, uint64_t offset, fel::buffer<char>& data, const userinfo_t userinfo) = 0;
 
 		/* Returns 0 on success */
-		virtual int64_t remove(file_t locator, file_t file, const userinfo_t userinfo) = 0;
+		virtual int64_t remove(file_t* locator, file_t file, const userinfo_t userinfo) = 0;
 	};
 }

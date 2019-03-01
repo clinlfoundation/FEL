@@ -371,7 +371,28 @@ namespace fel{
 					return fel::nullopt;
 				}
 			}
+#ifdef FEL_UNORDERED_MAP
 			return slot.ptr->second;
+#elif defined(FEL_UNORDERED_SET)
+			return *slot.ptr;
+#endif
+		}
+
+		template<typename tK>
+		V& get_or(tK key, V& alt)
+		{
+			auto off = find_free_key_slot(key, band);
+			auto& slot = band[off];
+			
+			if(slot.ptr == nullptr)
+			{
+				return alt;
+			}
+#ifdef FEL_UNORDERED_MAP
+			return slot.ptr->second;
+#elif defined(FEL_UNORDERED_SET)
+			return *slot.ptr;
+#endif
 		}
 
 		auto diagnose(buffer<char> i_buf) const
