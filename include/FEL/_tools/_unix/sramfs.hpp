@@ -365,7 +365,7 @@ namespace fel
 				return fel::filesystem::unsuitable_location;
 			}else
 			{
-				return fel::filesystem::unsuitable_location;
+				return fel::filesystem::unavailable_operation;
 			}
 		}
 
@@ -378,7 +378,25 @@ namespace fel
 		/* Returns a number of found files on success */
 		virtual int64_t list(file_t* file, fel::buffer<file_t>& data, const userinfo_t userinfo)
 		{
+			if(!has_permissions(*file, userinfo, access_t::READ))
+			{
+				return fel::filesystem::permission_denied;
+			}
 
+			if(file->is_directory)
+			{
+				auto map = reinterpret_cast<directory_data*>(file->locator);
+				fel::copy(map, data);
+				return map->size();
+			}
+			else if(file->is_special)
+			{
+				/* TODO */
+				return fel::filesystem::unavailable_operation;
+			}else
+			{
+				return fel::filesystem::unavailable_operation;
+			}
 		}
 
 		/* Returns a number of byte read on success */
@@ -396,7 +414,34 @@ namespace fel
 		/* Returns 0 on success */
 		virtual int64_t remove(file_t* locator, file_t file, const userinfo_t userinfo)
 		{
+			if(
+				!has_permissions(*locator, userinfo, access_t::WRITE) 
+				|| !has_permissions(file, userinfo, access_t::WRITE)
+			)
+			{
+				return fel::filesystem::permission_denied;
+			}
 
+			if(file.is_directory)
+			{
+				auto rev = rmdir(*locator, file);
+				if(rev == fel::badfile)
+					return fel::filesystem::operation_failed;
+				*locator=rev;
+			}
+			else if(file.is_special)
+			{
+				/* TODO */
+				return fel::filesystem::unavailable_operation;
+			}
+			else
+			{
+				auto rev = rmfile(*locator, file);
+				if(rev == fel::badfile)
+					return fel::filesystem::operation_failed;
+				*locator=rev;
+			}
+			return 0;
 		}
 	};
 
