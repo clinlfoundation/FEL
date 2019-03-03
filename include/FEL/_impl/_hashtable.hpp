@@ -9,31 +9,36 @@
 #include <type_traits>
 
 namespace fel{
-	
+
+#if !defined(FEL_HASHMAP_NODE)
+#define FEL_HASHMAP_NODE
+template<class T>
+struct node{
+	uint64_t band = 0;
+ 	T* ptr= nullptr;
+};
+#endif //FEL_HASHMAP_NODE
+
+
 #ifdef FEL_UNORDERED_MAP
-	template<typename K, typename V, typename hash_type = fel::hash<K>, typename large_memory_allocator = default_memory_allocator<>, typename node_memory_allocator = default_memory_allocator<>>
+	template<typename K, typename V, typename hash_type = fel::hash<K>, typename large_memory_allocator = default_memory_allocator<node<fel::pair<K,V>>>, typename node_memory_allocator = default_memory_allocator<fel::pair<K,V>>>
 	class unordered_map{
 #elif defined(FEL_UNORDERED_SET)
-	template<typename V, typename hash_type = fel::hash<V>, typename large_memory_allocator = default_memory_allocator<>, typename node_memory_allocator = default_memory_allocator<>>
+	template<typename V, typename hash_type = fel::hash<V>, typename large_memory_allocator = default_memory_allocator<node<V>>, typename node_memory_allocator = default_memory_allocator<V>>
 	class unordered_set{
 #endif 
-		struct node{
-			uint64_t band = 0;
-#ifdef FEL_UNORDERED_MAP
-			fel::pair<K,V>* ptr = nullptr;
-#elif defined(FEL_UNORDERED_SET)
-			V* ptr = nullptr;
-#endif 
-		};
+
 
 		static std::size_t find_free_key_slot
 		(
 #ifdef FEL_UNORDERED_MAP
 			const K key, 
+			const buffer<node<fel::pair<K, V>>>& band
 #elif defined(FEL_UNORDERED_SET)
 			const V key, 
+			const buffer<node<V>>& band
 #endif 
-			const buffer<node>& band
+
 		)
 		{
 			auto oh = hash(key);
@@ -66,7 +71,11 @@ namespace fel{
 		large_memory_allocator lma{};
 		node_memory_allocator nma{};
 		std::size_t _size;
-		buffer<node> band;
+#ifdef FEL_UNORDERED_MAP
+		buffer<node<fel::pair<K, V>>> band;
+#elif defined(FEL_UNORDERED_SET)
+		buffer<node<V>> band;
+#endif 
 	public:
 
 		class degrad_cursor{
@@ -117,9 +126,17 @@ namespace fel{
 		struct iterator
 		{
 			static constexpr iterator_type_t iterator_type = iterator_type_t::non_contiguous_iterator;
-			node* ptr;
+#ifdef FEL_UNORDERED_MAP
+			node<fel::pair<K, V>>* ptr;
+#elif defined(FEL_UNORDERED_SET)
+			node<V>* ptr;
+#endif 
 
-			constexpr iterator(node* orig)
+#ifdef FEL_UNORDERED_MAP
+			constexpr iterator(node<fel::pair<K,V>>* orig)
+#elif defined(FEL_UNORDERED_SET)
+			constexpr iterator(node<V>* orig)
+#endif 
 			: ptr{orig}
 			{}
 
@@ -181,10 +198,18 @@ namespace fel{
 		: lma{_lma}
 		, nma{_nma}
 		, _size{0}
-		, band((node*)lma.allocate(sizeof(node)*initial_capacity), initial_capacity)
+#ifdef FEL_UNORDERED_MAP
+		, band((node<fel::pair<K, V>>*)lma.allocate(sizeof(node<fel::pair<K, V>>)*initial_capacity), initial_capacity)
 		{
-			new(&band[0]) node[initial_capacity];
+			new(&band[0]) node<fel::pair<K, V>>[initial_capacity];
 		}
+#elif defined(FEL_UNORDERED_SET)
+		, band((node<V>*)lma.allocate(sizeof(node<V>)*initial_capacity), initial_capacity)
+		{
+			new(&band[0]) node<V>[initial_capacity];
+		}
+#endif 
+
 
 #ifdef FEL_UNORDERED_MAP
 		~unordered_map()
@@ -261,9 +286,13 @@ namespace fel{
 
 		void resize(std::size_t new_sz)
 		{
-			buffer<node> new_band((node*)lma.allocate(sizeof(node)*(new_sz+1)), new_sz);
-			new(&new_band[0]) node[new_sz+1];
-
+#ifdef FEL_UNORDERED_MAP
+			buffer<node<fel::pair<K, V>>> new_band((node<fel::pair<K, V>>*)lma.allocate(sizeof(node<fel::pair<K, V>>)*(new_sz+1)), new_sz);
+			new(&new_band[0]) node<fel::pair<K, V>>[new_sz+1];
+#elif defined(FEL_UNORDERED_SET)
+			buffer<node<V>> new_band((node<V>*)lma.allocate(sizeof(node<V>)*(new_sz+1)), new_sz);
+			new(&new_band[0]) node<V>[new_sz+1];
+#endif 
 			for(auto& elem : band)
 			{
 				if(elem.ptr!=nullptr)
