@@ -252,21 +252,24 @@ namespace fel
 		[[nodiscard]] file_t set_permissions(const userinfo_t& user, file_t file) const
 		{
 			file.suid = user.first;
-			file.guid = user.second.begin();
-			if(file.is_directory)
+			file.guid = (file.guid==-1)?
+				user.second.begin()
+				: file.guid;
+			if(file.rights==permissions_t{})
 			{
-				file.rights=defaults_directories;
-			}
-			else
-			{
-				file.rights=defaults_files;
+				if(file.is_directory)
+				{
+					file.rights=defaults_directories;
+				}
+				else
+				{
+					file.rights=defaults_files;
+				}
 			}
 		}
 
 
 	public:
-
-
 		sramfs(allocator _alloc = allocator{})
 		: alloc{_alloc}
 		{
@@ -314,7 +317,56 @@ namespace fel
 		/* Returns 0 on success */
 		virtual int64_t create(file_t* locator, file_t file, const userinfo_t userinfo)
 		{
+			if(!has_permissions(*locator, userinfo, access_t::WRITE))
+			{
+				return fel::filesystem::permission_denied;
+			}
 
+			file = set_permissions(file, userinfo);
+
+			if(locator->is_directory)
+			{
+				auto map = reinterpret_cast<directory_data*>(locator->locator);
+				auto filename_buf = fel::buffer{
+					&*file.filename_data.begin(),
+					&*file.filename_data.begin()+file.filename_size,
+				};
+				file_t concrete_file;
+				if(file.is_directory)
+				{
+					concrete_file = mkdir(filename_buf);
+					
+				}
+				else if(file.is_special)
+				{
+					/* TODO */
+					return fel::filesystem::permission_denied;
+				}
+				else
+				{
+					concrete_file = mkfile(filename_buf);
+				}
+				concrete_file.rights = file.rights;
+				concrete_file = set_permissions(concrete_file, userinfo);
+				
+				if(map->get_or(concrete_file.filename_data, fel::badfile)==fel::badfile)
+				{
+					map.insert(concrete_file.filename_data, concrete_file);
+					return 0;
+				}
+				else
+				{
+					return fel::filesystem::already_exist;
+				}
+			}
+			else if(locator->is_special)
+			{
+				/* TODO */
+				return fel::filesystem::unsuitable_location;
+			}else
+			{
+				return fel::filesystem::unsuitable_location;
+			}
 		}
 
 		/* Returns 0 on success */
