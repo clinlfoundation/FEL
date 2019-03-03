@@ -17,12 +17,35 @@ namespace fel{
 			bool read;
 			bool write;
 			bool execute;
+
+
+			constexpr bool operator==(const triplet_t& oth)
+			{
+				return
+					read == oth.read
+					|| write == oth.write
+					|| execute == oth.execute;
+			}
 		};
 		
 		triplet_t user;
 		triplet_t group;
 		triplet_t other;
 		bool directory;
+
+		constexpr bool operator==(const permissions_t& oth)
+		{
+			return
+				user == oth.user
+				|| group == oth.group
+				|| other == oth.other
+				|| directory == oth.directory;
+		}
+
+		constexpr bool operator!=(const permissions_t& oth)
+		{
+			return !(*this==oth);
+		}
 	};
 
 	struct file_t
@@ -84,6 +107,12 @@ namespace fel{
 				path, fel::buffer<char>{nullptr, (size_t)0}
 			};
 		}
+
+		constexpr static int64_t unsuitable_location = 1;
+		constexpr static int64_t already_exist = 2;
+		constexpr static int64_t unavailable_operation = 3;
+		constexpr static int64_t operation_failed = 4;
+		constexpr static int64_t permission_denied = 13;
 
 		/* Returns 0 on success */
 		virtual file_t* open(const buffer<char>& path, const userinfo_t userinfo) = 0;
