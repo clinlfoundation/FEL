@@ -22,9 +22,10 @@ namespace fel{
 		else
 		{
 			auto in = src.begin();
+			auto in_close = src.end();
 			auto out = dest.begin();
 			auto out_close = dest.end();
-			while(out != out_close)
+			while(out != out_close && in != in_close)
 			{
 				*(out++) = *(in++);
 			}

@@ -14,10 +14,9 @@ namespace fel{
 	{
 		struct triplet_t
 		{
-			bool read;
-			bool write;
-			bool execute;
-
+			bool read : 1;
+			bool write : 1;
+			bool execute : 1;
 
 			constexpr bool operator==(const triplet_t& oth)
 			{
@@ -108,11 +107,11 @@ namespace fel{
 			};
 		}
 
-		constexpr static int64_t unsuitable_location = 1;
-		constexpr static int64_t already_exist = 2;
-		constexpr static int64_t unavailable_operation = 3;
-		constexpr static int64_t operation_failed = 4;
-		constexpr static int64_t permission_denied = 13;
+		constexpr static int64_t unsuitable_location = -1;
+		constexpr static int64_t already_exist = -2;
+		constexpr static int64_t unavailable_operation = -3;
+		constexpr static int64_t operation_failed = -4;
+		constexpr static int64_t permission_denied = -13;
 
 		/* Returns 0 on success */
 		virtual file_t* open(const buffer<char>& path, const userinfo_t userinfo) = 0;

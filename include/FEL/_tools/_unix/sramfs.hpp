@@ -1,6 +1,7 @@
 #pragma once
 #include <FEL/_tools/_unix/fs_primitives.hpp>
 #include <FEL/memory.hpp>
+#include <FEL/vector.hpp>
 #include <FEL/unordered_map.hpp>
 #include <FEL/range/constant_range.hpp>
 
@@ -24,6 +25,7 @@ namespace fel
 		};
 
 		using directory_data = fel::unordered_map<file_t::fn_t, file_t, allocator, allocator>;
+		using file_data = fel::vector<char*, allocator>;
 
 		/* generates a directory but do not insert it in a parent */
 		[[nodiscard]] file_t mkdir(const buffer<char>& filename) const
@@ -99,6 +101,9 @@ namespace fel
 			if(parent.is_special || !parent.is_directory) return fel::badfile;
 
 			file_t file = mkfile(filename);
+			file.locator = reinterpret_cast<uint64_t>(
+				new(alloc(sizeof(file_data))) file_data(0, alloc)
+			);
 
 			auto parent_map = reinterpret_cast<directory_data*>(parent.locator);
 
@@ -118,7 +123,10 @@ namespace fel
 
 			auto& filedata = (*parent_map)[file.filename_data];
 
-			if(filedata.locator != 0) alloc.deallocate(reinterpret_cast<void*>(filedata.locator));
+			if(filedata.locator != 0){
+				reinterpret_cast<file_data*>(filedata.locator)->~file_data();
+				alloc.deallocate(reinterpret_cast<file_data*>(filedata.locator));
+			}
 			if(filedata.extended != 0) alloc.deallocate(reinterpret_cast<void*>(filedata.extended));
 
 			parent_map->remove(file.filename_data);
@@ -220,7 +228,25 @@ namespace fel
 			},
 			.directory=false
 		};
-	private:
+
+		[[nodiscard]] file_t set_permissions(const userinfo_t& user, file_t file) const
+		{
+			file.suid = user.first;
+			file.guid = (file.guid==-1)?
+				user.second.begin()
+				: file.guid;
+			if(file.rights==permissions_t{})
+			{
+				if(file.is_directory)
+				{
+					file.rights=defaults_directories;
+				}
+				else
+				{
+					file.rights=defaults_files;
+				}
+			}
+		}
 
 		[[nodiscard]] constexpr bool has_permissions(const userinfo_t& user, const file_t& file, const access_t& type) const
 		{
@@ -244,32 +270,11 @@ namespace fel
 				case(access_t::UPDATE):
 					if(user.first==file.suid) return true;
 					for(auto group : user.second)
-						if(group==file.guid) return true;
+						if(group==file.guid) return file.rights.group.write;
 					return false;
 			}
 		}
 
-		[[nodiscard]] file_t set_permissions(const userinfo_t& user, file_t file) const
-		{
-			file.suid = user.first;
-			file.guid = (file.guid==-1)?
-				user.second.begin()
-				: file.guid;
-			if(file.rights==permissions_t{})
-			{
-				if(file.is_directory)
-				{
-					file.rights=defaults_directories;
-				}
-				else
-				{
-					file.rights=defaults_files;
-				}
-			}
-		}
-
-
-	public:
 		sramfs(allocator _alloc = allocator{})
 		: alloc{_alloc}
 		{
@@ -402,13 +407,58 @@ namespace fel
 		/* Returns a number of byte read on success */
 		virtual int64_t read(file_t* locator, uint64_t offset, fel::buffer<char>& data, const userinfo_t userinfo)
 		{
+			if(!has_permissions(*locator, userinfo, access_t::READ))
+			{
+				return fel::filesystem::permission_denied;
+			}
 
+			if(locator->is_directory) return fel::filesystem::unavailable_operation;
+
+			if(locator->is_special) return fel::filesystem::unavailable_operation;
+
+			auto in_range = fel::nameless_range{
+				reinterpret_cast<file_data*>(locator->locator)->begin()+offset,
+				reinterpret_cast<file_data*>(locator->locator)->end()
+			};
+
+			auto left = fel::copy(in_range, data);
+
+			return data.size() - left.size();
 		}
 
 		/* Returns a number of byte written on success */
 		virtual int64_t write(file_t* locator, uint64_t offset, fel::buffer<char>& data, const userinfo_t userinfo)
 		{
+			if(!has_permissions(*locator, userinfo, access_t::WRITE))
+			{
+				return fel::filesystem::permission_denied;
+			}
 
+			if(locator->is_directory) return fel::filesystem::unavailable_operation;
+
+			if(locator->is_special) return fel::filesystem::unavailable_operation;
+
+			auto vec = reinterpret_cast<file_data*>(locator->locator);
+
+			vec->resize(offset+data.size());
+
+			auto inplace_space = fel::nameless_range{
+				vec->begin()+offset,
+				vec->end()
+			};
+
+			auto source = fel::nameless_range<fel::buffer<char>::associated_iterator>{
+				data.begin(), 
+				data.end()
+			};
+
+			auto tmp = fel::copy(
+				source,
+				inplace_space
+			);
+
+			locator->size = vec->size();
+			return inplace_space.size()-tmp.size();
 		}
 
 		/* Returns 0 on success */
