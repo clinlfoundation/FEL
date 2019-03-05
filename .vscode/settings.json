@@ -5,7 +5,9 @@
         "vector": "cpp",
         "initializer_list": "cpp",
         "string_view": "cpp",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "limits": "cpp",
+        "type_traits": "cpp"
     },
     "C_Cpp.dimInactiveRegions": false
 }

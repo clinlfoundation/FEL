@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <cstdlib>
-#include <type_traits>
+#include "FEL/type_traits.hpp"
 
 namespace fel_config{
 	namespace memory_module{
