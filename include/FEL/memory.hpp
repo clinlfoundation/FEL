@@ -1,6 +1,6 @@
 #pragma once
 #include "fel_config.hpp"
-#include "type_traits.hpp"
+#include <type_traits>
 
 namespace fel{
 	template<class T, typename I = std::enable_if_t<fel_config::memory_module::is_ok,int>>
