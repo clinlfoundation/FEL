@@ -8,6 +8,8 @@ namespace fel{
 
 	template<typename T>
 	struct hash<T, std::enable_if_t<std::is_integral_v<T>, void>>{
+		constexpr hash() = default;
+		constexpr hash(const T&){};
 		constexpr uint64_t operator()(const T& value) const 
 		{
 			return value;
@@ -15,6 +17,8 @@ namespace fel{
 	};
 	template<typename T>
 	struct hash<T, std::enable_if_t<std::is_floating_point_v<T>, void>>{
+		constexpr hash() = default;
+		constexpr hash(const T&){};
 		constexpr uint64_t operator()(const T& value) const 
 		{
 			if constexpr(sizeof(T)==2)
@@ -27,14 +31,24 @@ namespace fel{
 	};
 	template<typename T>
 	struct hash<T, std::enable_if_t<has_range_interface<T>::value, void>>{
+		constexpr hash() = default;
+		constexpr hash(const T&){};
+
+		template<typename U>
+		uint64_t subhash(const U& value) const
+		{
+			hash<U> child;
+			return child(value);
+		}
+
 		constexpr uint64_t operator()(const T& value) const 
 		{
 			uint64_t cumul = 0;
-			for(auto elem : value)
+			for(const auto& elem : value)
 			{
 				cumul++;
 				cumul<<=1;
-				cumul += hash(elem);
+				cumul += subhash<>(elem);
 			}
 			return cumul;
 		}

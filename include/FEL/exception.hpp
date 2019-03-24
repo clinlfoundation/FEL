@@ -48,6 +48,20 @@ namespace fel{
 		}
 	};
 
+	template<typename orig, typename target>
+	class bad_buffer_cast : public runtime_error{
+		public:
+		bad_buffer_cast(const char* what)
+		: runtime_error{what}
+		{}
+
+		bad_buffer_cast()
+		: runtime_error{}
+		{
+			what_str = "bad_buffer_cast error has occured";
+		}
+	};
+
 	template<typename Expected>
 	class bad_variant_access : public runtime_error{
 		public:

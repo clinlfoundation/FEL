@@ -8,23 +8,11 @@ namespace fel{
 		F first;
 		S second;
 
-		pair(F& v1, S& v2)
-		{
-			first = v1;
-			second = v2;
-		}
-
-		pair(F& v1, S&& v2)
-		{
-			first = v1;
-			second = fel::move(v2);
-		}
-
-		pair(F&& v1, S&& v2)
-		{
-			first = fel::move(v1);
-			second = fel::move(v2);
-		}
+		template<typename vF, typename vS>
+		pair(vF v1, vS v2)
+		: first{v1}
+		, second{v2}
+		{}
 
 		pair(const pair&) = default;
 		pair(pair&&) = default;

@@ -15,8 +15,9 @@ namespace fel{
 	public:
 		using associated_iterator = typename fel::buffer<T>::associated_iterator;
 
-		vector(std::size_t _sz = 12)
-		: backend{(T*)alloc.allocate(_sz*sizeof(T)), _sz}
+		vector(std::size_t _sz = 12, allocator def = allocator{})
+		: alloc{def}
+		, backend{(T*)alloc.allocate(_sz*sizeof(T)), _sz}
 		{}
 
 		vector(const vector& vec)
@@ -86,7 +87,7 @@ namespace fel{
 			new_sz = fel::max(sz, new_sz);
 			if(new_sz>capacity()) reserve(new_sz);
 			for(size_t idx = sz; idx<new_sz; idx++)
-				new(&*backend[idx]) T{};
+				new(&backend[idx]) T{};
 			sz = new_sz;
 		}
 

@@ -83,12 +83,12 @@ namespace fel{
 
 			degrad_cursor(
 #ifdef FEL_UNORDERED_MAP
-				K& _key, unordered_map* _target
+				K _key, const unordered_map* _target
 #elif defined(FEL_UNORDERED_SET)
-				V& _key, unordered_set* _target
+				V _key, const unordered_set* _target
 #endif 
 			)
-			: key{_key}
+			: key{fel::move(_key)}
 			, target{_target}
 			{}
 		public:
@@ -132,6 +132,17 @@ namespace fel{
 				while(ptr->ptr!=nullptr);
 				return iterator{ptr};
 			}
+
+			
+			V& operator*()
+			{
+#ifdef FEL_UNORDERED_MAP
+				return ptr->ptr->second;
+#elif defined(FEL_UNORDERED_SET)
+				return *(ptr->ptr);
+#endif 
+			}
+
 			iterator operator++(int)
 			{
 				auto tmp = ptr;
@@ -211,7 +222,7 @@ namespace fel{
 		iterator begin() const
 		{
 			auto start = &*band.begin();
-			while(start.ptr==nullptr && start!=&*band.begin()+band.size())
+			while(start->ptr==nullptr && start!=&*band.begin()+band.size())
 				++start;
 			return start;
 		}
@@ -231,13 +242,13 @@ namespace fel{
 			return band.size();
 		}
 
-		degrad_cursor operator[] (
+		degrad_cursor operator[](
 #ifdef FEL_UNORDERED_MAP
 			K& key
 #elif defined(FEL_UNORDERED_SET)
 			V& key
 #endif 
-		)
+		) const
 		{
 			return degrad_cursor{
 				key,
@@ -245,13 +256,13 @@ namespace fel{
 			};
 		}
 
-		degrad_cursor operator[] (
+		degrad_cursor operator[](
 #ifdef FEL_UNORDERED_MAP
 			K&& key
 #elif defined(FEL_UNORDERED_SET)
 			V&& key
 #endif 
-		)
+		) const
 		{
 			return degrad_cursor{
 				.key = fel::move(key),

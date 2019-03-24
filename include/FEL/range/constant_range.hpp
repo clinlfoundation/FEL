@@ -17,7 +17,7 @@ namespace fel{
 			iterator operator++(int){return *this;}
 			iterator operator--(){return *this;}
 			iterator operator--(int){return *this;}
-			iterator operator*(){return parent->value;}
+			T operator*(){return parent->value;}
 
 			bool operator==(const iterator& oth)
 			{return parent->value==oth.parent->value;}

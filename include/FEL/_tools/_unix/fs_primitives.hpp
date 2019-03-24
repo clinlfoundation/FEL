@@ -2,6 +2,7 @@
 #include <FEL/array.hpp>
 #include <FEL/buffer.hpp>
 #include <FEL/pair.hpp>
+
 namespace fel{
 
 	constexpr size_t max_file_name = 255;
@@ -22,8 +23,8 @@ namespace fel{
 			{
 				return
 					read == oth.read
-					|| write == oth.write
-					|| execute == oth.execute;
+					&& write == oth.write
+					&& execute == oth.execute;
 			}
 		};
 		
@@ -36,9 +37,9 @@ namespace fel{
 		{
 			return
 				user == oth.user
-				|| group == oth.group
-				|| other == oth.other
-				|| directory == oth.directory;
+				&& group == oth.group
+				&& other == oth.other
+				&& directory == oth.directory;
 		}
 
 		constexpr bool operator!=(const permissions_t& oth)
@@ -63,6 +64,18 @@ namespace fel{
 		bool is_special;
 		fn_t filename_data;
 		size_t filename_size;
+
+		constexpr bool operator==(const file_t& oth)
+		{
+			return
+				suid == oth.suid
+				&& guid == oth.guid
+				&& rights == oth.rights
+				&& extended == oth.extended
+				&& locator == oth.locator
+				&& is_directory == oth.is_directory
+				&& is_special == oth.is_special;
+		}
 	};
 
 	file_t badfile{
@@ -99,11 +112,12 @@ namespace fel{
 						&*(++it),
 						&*path.end()
 					};
-					return fel::pair{current_part, pass_part};
+					return fel::pair<fel::buffer<char>,fel::buffer<char>>{current_part, pass_part};
 				}
 			}
-			return fel::pair{
-				path, fel::buffer<char>{nullptr, (size_t)0}
+			return fel::pair<fel::buffer<char>,fel::buffer<char>>{
+				fel::buffer<char>{path}, 
+				fel::buffer<char>{(char*)nullptr, (size_t)0}
 			};
 		}
 

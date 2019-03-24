@@ -27,5 +27,22 @@ namespace fel{
 		{
 			return fel::buffer<T>{(T*)ary, (T*)ary+sz}.end();
 		}
+
+		constexpr bool operator==(const array& oth) const
+		{
+			for(size_t idx = 0; idx<sz; idx++)
+			{
+				if(ary[idx] != oth.ary[idx])
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		fel::buffer<T> as_buffer()
+		{
+			return fel::buffer<T>{(T*)ary, (T*)ary+sz};
+		}
 	};
 }

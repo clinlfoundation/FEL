@@ -4,6 +4,7 @@
 #include <FEL/optional.hpp>
 #include <FEL/iterator.hpp>
 #include <FEL/function.hpp>
+#include <FEL/exception.hpp>
 #include <FEL/algorithm/move.hpp>
 
 namespace fel{
@@ -141,6 +142,54 @@ namespace fel{
 			return 
 				ptr.data < end_elem.data
 				&& ptr.data >= begin_elem.data;
+		}
+
+		template<typename U>
+		buffer<U> cast()
+		{
+			if constexpr(sizeof(T)%sizeof(U) == 0)
+			{
+				return buffer<U>(reinterpret_cast<U*>(&*begin_elem), size()*(sizeof(T)/sizeof(U)));
+			}
+			else
+			{
+				if(size()*sizeof(T)/sizeof(U))
+				{
+					return buffer<U>(reinterpret_cast<U*>(&*begin_elem), size()*sizeof(T)/sizeof(U));
+				}
+				else if constexpr (fel_config::has_exceptions)
+				{
+					throw bad_buffer_cast<T, U>{};
+				}
+				else
+				{
+					return buffer<U>(reinterpret_cast<U*>(nullptr), 0);
+				}
+			}
+		}
+
+		buffer slice_start(size_t new_sz)
+		{
+			if(new_sz<=size())
+			{
+				return buffer{&*begin(), &*(begin()+new_sz)};
+			}
+			else
+			{
+				return buffer{(T*)nullptr,(size_t)0};
+			}
+		}
+
+		buffer slice_end(size_t new_sz)
+		{
+			if(new_sz<=size())
+			{
+				return buffer{&*(end()-(1+new_sz)), &*end()};
+			}
+			else
+			{
+				return buffer{(T*)nullptr,(size_t)0};
+			}
 		}
 	};
 

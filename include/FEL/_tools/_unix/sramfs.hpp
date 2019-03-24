@@ -24,11 +24,11 @@ namespace fel
 			bool is_mount_point;
 		};
 
-		using directory_data = fel::unordered_map<file_t::fn_t, file_t, allocator, allocator>;
-		using file_data = fel::vector<char*, allocator>;
+		using directory_data = fel::unordered_map<file_t::fn_t, file_t, fel::hash<file_t::fn_t>, allocator, allocator>;
+		using file_data = fel::vector<char, allocator>;
 
 		/* generates a directory but do not insert it in a parent */
-		[[nodiscard]] file_t mkdir(const buffer<char>& filename) const
+		[[nodiscard]] file_t mkdir(const buffer<char>& filename)
 		{
 			if(filename.size()>fel::max_file_name) return fel::badfile;
 
@@ -37,11 +37,15 @@ namespace fel
 				.guid = -1,
 				.rights = permissions_t{},
 				.size = 0,
-				.extended = reinterpret_cast<intptr_t>(
-					alloc(sizeof(directory_attr))
+				.extended = static_cast<uint64_t>(
+					reinterpret_cast<intptr_t>(
+						alloc.allocate(sizeof(directory_attr))
+					)
 				),
-				.locator = reinterpret_cast<intptr_t>(
-					new(alloc(sizeof(directory_data))) directory_data(12, alloc, alloc)
+				.locator = static_cast<uint64_t>(
+					reinterpret_cast<intptr_t>(
+						new(alloc.allocate(sizeof(directory_data))) directory_data(12, alloc, alloc)
+					)
 				),
 				.is_directory = true,
 				.is_special = false,
@@ -80,10 +84,16 @@ namespace fel
 				.guid = -1,
 				.rights = permissions_t{},
 				.size = 0,
-				.extended = reinterpret_cast<intptr_t>(
-					alloc(sizeof(file_attr))
+				.extended = static_cast<uint64_t>(
+					reinterpret_cast<intptr_t>(
+						alloc.allocate(sizeof(file_attr))
+					)
 				),
-				.locator = 0,
+				.locator = static_cast<uint64_t>(
+					reinterpret_cast<intptr_t>(
+						new(alloc.allocate(sizeof(file_data))) file_data(0, alloc)
+					)
+				),
 				.is_directory = false,
 				.is_special = false,
 				.filename_data = {},
@@ -101,9 +111,6 @@ namespace fel
 			if(parent.is_special || !parent.is_directory) return fel::badfile;
 
 			file_t file = mkfile(filename);
-			file.locator = reinterpret_cast<uint64_t>(
-				new(alloc(sizeof(file_data))) file_data(0, alloc)
-			);
 
 			auto parent_map = reinterpret_cast<directory_data*>(parent.locator);
 
@@ -246,6 +253,7 @@ namespace fel
 					file.rights=defaults_files;
 				}
 			}
+			return file;
 		}
 
 		[[nodiscard]] constexpr bool has_permissions(const userinfo_t& user, const file_t& file, const access_t& type) const
@@ -322,12 +330,12 @@ namespace fel
 		/* Returns 0 on success */
 		virtual int64_t create(file_t* locator, file_t file, const userinfo_t userinfo)
 		{
-			if(!has_permissions(*locator, userinfo, access_t::WRITE))
+			if(!has_permissions(userinfo, *locator, access_t::WRITE))
 			{
 				return fel::filesystem::permission_denied;
 			}
 
-			file = set_permissions(file, userinfo);
+			file = set_permissions(userinfo, file);
 
 			if(locator->is_directory)
 			{
@@ -352,11 +360,11 @@ namespace fel
 					concrete_file = mkfile(filename_buf);
 				}
 				concrete_file.rights = file.rights;
-				concrete_file = set_permissions(concrete_file, userinfo);
+				concrete_file = set_permissions(userinfo, concrete_file);
 				
 				if(map->get_or(concrete_file.filename_data, fel::badfile)==fel::badfile)
 				{
-					map.insert(concrete_file.filename_data, concrete_file);
+					map->insert(concrete_file.filename_data, concrete_file);
 					return 0;
 				}
 				else
@@ -377,13 +385,13 @@ namespace fel
 		/* Returns 0 on success */
 		virtual int64_t update(file_t* file, const userinfo_t userinfo)
 		{
-
+			return 0;
 		}
 
 		/* Returns a number of found files on success */
 		virtual int64_t list(file_t* file, fel::buffer<file_t>& data, const userinfo_t userinfo)
 		{
-			if(!has_permissions(*file, userinfo, access_t::READ))
+			if(!has_permissions(userinfo, *file, access_t::READ))
 			{
 				return fel::filesystem::permission_denied;
 			}
@@ -391,7 +399,7 @@ namespace fel
 			if(file->is_directory)
 			{
 				auto map = reinterpret_cast<directory_data*>(file->locator);
-				fel::copy(map, data);
+				fel::copy(*map, data);
 				return map->size();
 			}
 			else if(file->is_special)
@@ -407,7 +415,7 @@ namespace fel
 		/* Returns a number of byte read on success */
 		virtual int64_t read(file_t* locator, uint64_t offset, fel::buffer<char>& data, const userinfo_t userinfo)
 		{
-			if(!has_permissions(*locator, userinfo, access_t::READ))
+			if(!has_permissions(userinfo, *locator, access_t::READ))
 			{
 				return fel::filesystem::permission_denied;
 			}
@@ -416,7 +424,7 @@ namespace fel
 
 			if(locator->is_special) return fel::filesystem::unavailable_operation;
 
-			auto in_range = fel::nameless_range{
+			auto in_range = fel::nameless_range<typename file_data::associated_iterator>{
 				reinterpret_cast<file_data*>(locator->locator)->begin()+offset,
 				reinterpret_cast<file_data*>(locator->locator)->end()
 			};
@@ -429,7 +437,7 @@ namespace fel
 		/* Returns a number of byte written on success */
 		virtual int64_t write(file_t* locator, uint64_t offset, fel::buffer<char>& data, const userinfo_t userinfo)
 		{
-			if(!has_permissions(*locator, userinfo, access_t::WRITE))
+			if(!has_permissions(userinfo, *locator, access_t::WRITE))
 			{
 				return fel::filesystem::permission_denied;
 			}
@@ -442,7 +450,7 @@ namespace fel
 
 			vec->resize(offset+data.size());
 
-			auto inplace_space = fel::nameless_range{
+			auto inplace_space = fel::nameless_range<typename file_data::associated_iterator>{
 				vec->begin()+offset,
 				vec->end()
 			};
@@ -465,8 +473,8 @@ namespace fel
 		virtual int64_t remove(file_t* locator, file_t file, const userinfo_t userinfo)
 		{
 			if(
-				!has_permissions(*locator, userinfo, access_t::WRITE) 
-				|| !has_permissions(file, userinfo, access_t::WRITE)
+				!has_permissions(userinfo, *locator, access_t::WRITE) 
+				|| !has_permissions(userinfo, file, access_t::WRITE)
 			)
 			{
 				return fel::filesystem::permission_denied;
@@ -494,5 +502,4 @@ namespace fel
 			return 0;
 		}
 	};
-
 }

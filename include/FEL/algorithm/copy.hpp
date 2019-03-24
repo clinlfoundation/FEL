@@ -4,12 +4,12 @@
 
 namespace fel{
 	template<typename range_in, typename range_out>
-	range_out copy(range_in src, range_out dest)
+	nameless_range<typename range_out::associated_iterator> copy(range_in src, range_out dest)
 	{
 		if constexpr (range_in::associated_iterator::iterator_type != iterator_type_t::lazy_iterator)
 		{
 			if(src.size()>dest.size())
-				return dest;
+				return nameless_range<typename range_out::associated_iterator>{dest.begin(), dest.end()};
 			auto in = src.begin();
 			auto in_close = src.end();
 			auto out = dest.begin();
