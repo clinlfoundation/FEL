@@ -3,27 +3,30 @@
 #include <type_traits>
 
 namespace fel{
-	template<typename I = std::enable_if_t<fel_config::memory_module::is_ok,int>>
+	template<class T, typename I = std::enable_if_t<fel_config::memory_module::is_ok,int>>
 	class default_memory_allocator
 	{
 	public:
-		void* allocate(size_t sz)
+		using pointer_type = T*;
+		using reference_type = T&;
+		using const_pointer_type = const T*;
+		using const_reference_type = const T&;
+
+		pointer_type allocate(size_t sz)
 		{
-			return fel_config::memory_module::memory_allocator<fel_config::memory_module::memory_mode>(sz);
+			return reinterpret_cast <pointer_type> (fel_config::memory_module::memory_allocator<fel_config::memory_module::memory_mode>(sizeof(T) * sz));
 		}
 
-		void deallocate(void* ptr)
+		void deallocate(pointer_type ptr)
 		{
 			fel_config::memory_module::memory_deallocator<fel_config::memory_module::memory_mode>(ptr);
 		}
 	};
-
-	
 }
 
 void* operator new(size_t sz)
 {
-	auto ptr = fel::default_memory_allocator{}.allocate(sz);
+	auto ptr = fel_config::memory_module::memory_allocator<fel_config::memory_module::memory_mode>(sz);
 	if constexpr (fel_config::has_exceptions)
 	{
 		if(!ptr)
@@ -36,5 +39,5 @@ void* operator new(size_t sz)
 
 void operator delete (void* ptr) noexcept
 {
-	fel::default_memory_allocator{}.deallocate(ptr);
+	fel_config::memory_module::memory_deallocator<fel_config::memory_module::memory_mode>(ptr);
 }

@@ -69,7 +69,6 @@ namespace fel{
 				self = new callable(t);
 				state = ACTIVE | NO_SOO;
 			}
-			return *this;
 		}
 
 		template <typename T>

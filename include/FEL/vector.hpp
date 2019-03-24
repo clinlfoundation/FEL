@@ -6,7 +6,7 @@
 #include "FEL/algorithm/destroy.hpp"
 namespace fel{
 
-	template<typename T, typename allocator = fel::default_memory_allocator<>>
+	template<typename T, typename allocator = fel::default_memory_allocator<T>>
 	class vector
 	{
 		allocator alloc{};
@@ -52,8 +52,7 @@ namespace fel{
 			{
 				auto to_clear = nameless_range<associated_iterator>{begin(),end()};
 				destroy_range<T>(to_clear);
-				void* ptr = (void*)&*backend.begin();
-				alloc.deallocate(ptr);
+				alloc.deallocate(reinterpret_cast<typename allocator::pointer_type> (&*backend.begin()));
 			}
 		}
 
@@ -82,37 +81,27 @@ namespace fel{
 			return backend.size();
 		}
 
-		void resize(std::size_t new_sz)
-		{
-			new_sz = fel::max(sz, new_sz);
-			if(new_sz>capacity()) reserve(new_sz);
-			for(size_t idx = sz; idx<new_sz; idx++)
-				new(&backend[idx]) T{};
-			sz = new_sz;
-		}
-
 		void reserve(std::size_t new_cap)
 		{
-			new_cap = fel::max(capacity(), new_cap);
-			auto new_backend = fel::buffer<T>{(T*)alloc.allocate(new_cap*sizeof(T)), new_cap};
+			new_cap = fel::max(sz, new_cap);
+			auto new_backend = fel::buffer<T>{alloc.allocate(new_cap), new_cap};
 			fel::move_uninitialized<T>(backend, new_backend);
-			void* ptr = (void*)&*backend.begin();
+			alloc.deallocate(reinterpret_cast<typename allocator::pointer_type> (&*backend.begin()));
 			backend = new_backend;
-			alloc.deallocate(ptr);
 		}
 
 		template<typename U>
 		void push_back(const U& value)
 		{
-			if(sz+1>capacity())
+			if(sz+1 > capacity())
 			{
-				reserve(capacity()*1.5f);
+				reserve(backend.size()*1.5f);
 			}
 			new(&*end()) T(value);
 			++sz;
 		}
 
-		typename fel::remove_reference<T>::type&& pop_back()
+		[[nodiscard]] typename fel::remove_reference<T>::type&& pop_back() 
 		{
 			return fel::forward<T>(operator[](--sz));
 		}

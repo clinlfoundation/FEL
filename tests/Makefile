@@ -1,5 +1,5 @@
-CXX = clang++
-CXXFLAGS = --std=c++17 -O3 -march=native
+CXX = g++
+CXXFLAGS = -Wfatal-errors --std=c++17 -O3 -march=native
 INCLUDE = -I../include
 
 all: ./bin/test001.out ./bin/test002.out ./bin/test003.out ./bin/test004.out
