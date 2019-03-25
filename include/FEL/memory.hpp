@@ -23,9 +23,10 @@ namespace fel{
 		}
 
 		template<typename ...params>
-		void construct(pointer_type ptr, params... args)
+		pointer_type construct(pointer_type ptr, params... args)
 		{
 			new(ptr) T(args...);
+			return ptr;
 		}
 	};
 }
