@@ -21,6 +21,12 @@ namespace fel{
 		{
 			fel_config::memory_module::memory_deallocator<fel_config::memory_module::memory_mode>(ptr);
 		}
+
+		template<typename ...params>
+		void construct(pointer_type ptr, params... args)
+		{
+			new(ptr) T(args...);
+		}
 	};
 }
 
