@@ -90,6 +90,12 @@ namespace fel{
 			backend = new_backend;
 		}
 
+		void resize(std::size_t new_sz)
+		{
+			reserve(new_sz);
+			sz=new_sz;
+		}
+
 		template<typename U>
 		void push_back(const U& value)
 		{

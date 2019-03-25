@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -Wfatal-errors --std=c++17 -O3 -march=native
+CXXFLAGS = -Wfatal-errors --std=c++17 -O3 -march=native -pthread
 INCLUDE = -I../include
 
 all: ./bin/test001.out ./bin/test002.out ./bin/test003.out ./bin/test004.out
@@ -17,6 +17,10 @@ all: ./bin/test001.out ./bin/test002.out ./bin/test003.out ./bin/test004.out
 	$(@:.out=.x) $@ $(@:.out=.err)
 
 ./bin/test004.out: test004.cpp
+	$(CXX) $(CXXFLAGS) ${INCLUDE} -o $(@:.out=.x) $<
+	$(@:.out=.x) $@ $(@:.out=.err)
+
+./bin/test005.out: test005.cpp
 	$(CXX) $(CXXFLAGS) ${INCLUDE} -o $(@:.out=.x) $<
 	$(@:.out=.x) $@ $(@:.out=.err)
 
