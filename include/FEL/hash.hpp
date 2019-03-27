@@ -41,7 +41,7 @@ namespace fel{
 			return child(value);
 		}
 
-		constexpr uint64_t operator()(const T& value) const 
+		uint64_t operator()(const T& value) const 
 		{
 			uint64_t cumul = 0;
 			for(const auto& elem : value)

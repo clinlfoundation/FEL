@@ -1,8 +1,8 @@
-CXX = g++
+CXX = clang++
 CXXFLAGS = -Wfatal-errors --std=c++17 -O3 -march=native -pthread
 INCLUDE = -I../include
 
-all: ./bin/test001.out ./bin/test002.out ./bin/test003.out ./bin/test004.out
+all: ./bin/test002.out ./bin/test003.out ./bin/test004.out ./bin/test005.out
 
 ./bin/test001.out: test001.cpp
 	$(CXX) $(CXXFLAGS) ${INCLUDE} -o $(@:.out=.x) $<

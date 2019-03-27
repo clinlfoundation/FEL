@@ -28,6 +28,11 @@ namespace fel{
 			new(ptr) T(args...);
 			return ptr;
 		}
+
+		void destroy(pointer_type v)
+		{
+			v->~T();
+		}
 	};
 }
 

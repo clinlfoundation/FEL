@@ -76,6 +76,10 @@ namespace fel{
 				&& is_directory == oth.is_directory
 				&& is_special == oth.is_special;
 		}
+		constexpr bool operator!=(const file_t& oth)
+		{
+			return !(*this == oth);
+		}
 	};
 
 	file_t badfile{

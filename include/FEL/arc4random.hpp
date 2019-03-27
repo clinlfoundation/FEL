@@ -8,7 +8,7 @@ extern "C"
 	extern char base_state_str[32];
 }
 
-template<size_t rounds = 6>
+template<size_t rounds = fel_config::arc4random_strength>
 class Arc4Random final
 /*
 Bow at thy randomness
@@ -133,6 +133,12 @@ public:
 		fel::copy(seed.cast<uint32_t>(), rest);
 	}
 
+	Arc4Random(fel::buffer<uint32_t> seed)
+	{
+		auto rest = fel::copy(base_state().cast<uint32_t>(), state);
+		fel::copy(seed, rest);
+	}
+
 	void feed(uint64_t seed)
 	{
 		fel::buffer<uint64_t> ary = state.as_buffer().slice_end(2).template cast<uint64_t>();
@@ -145,7 +151,10 @@ public:
 		fel::buffer<uint64_t> ary = state.as_buffer().slice_end(2).template cast<uint64_t>();
 		fel::buffer<uint64_t> bry = state.as_buffer().slice_end(4).slice_start(2).template cast<uint64_t>();
 		ary[0]+=4;
+		auto cpy = state;
 		scramble();
+		for(size_t i = 0; i<state.size(); ++i)
+			state[i]+=cpy[i];
 		return bry[0];
 	}
 

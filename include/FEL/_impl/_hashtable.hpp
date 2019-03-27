@@ -92,12 +92,23 @@ struct node{
 
 			degrad_cursor(
 #ifdef FEL_UNORDERED_MAP
-				K _key, const unordered_map* _target
+				K&& _key, unordered_map* _target
 #elif defined(FEL_UNORDERED_SET)
-				V _key, const unordered_set* _target
+				V&& _key, unordered_set* _target
 #endif 
 			)
 			: key{fel::move(_key)}
+			, target{_target}
+			{}
+
+			degrad_cursor(
+#ifdef FEL_UNORDERED_MAP
+				K& _key, unordered_map* _target
+#elif defined(FEL_UNORDERED_SET)
+				V& _key, unordered_set* _target
+#endif 
+			)
+			: key{_key}
 			, target{_target}
 			{}
 		public:
@@ -273,7 +284,7 @@ struct node{
 #elif defined(FEL_UNORDERED_SET)
 			V& key
 #endif 
-		) const
+		)
 		{
 			return degrad_cursor{
 				key,
@@ -287,7 +298,7 @@ struct node{
 #elif defined(FEL_UNORDERED_SET)
 			V&& key
 #endif 
-		) const
+		)
 		{
 			return degrad_cursor{
 				.key = fel::move(key),

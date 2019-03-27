@@ -45,4 +45,9 @@ namespace fel_config{
 	}
 
 	constexpr bool has_exceptions = true;
+
+	// Value of  8 is considered not cryptographically secure
+	// Value of 12 offers a good compromise of performance and robustness
+	// Value of 20 offers maximum robustness
+	constexpr size_t arc4random_strength = 20;
 }

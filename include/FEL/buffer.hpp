@@ -61,7 +61,17 @@ namespace fel{
 				return buffer_iterator{data+offset};
 			}
 
+			constexpr buffer_iterator operator+(const int offset)
+			{
+				return buffer_iterator{data+offset};
+			}
+
 			constexpr buffer_iterator operator-(const std::size_t offset)
+			{
+				return buffer_iterator{data-offset};
+			}
+
+			constexpr buffer_iterator operator-(const int offset)
 			{
 				return buffer_iterator{data-offset};
 			}
