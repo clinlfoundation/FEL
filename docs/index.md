@@ -16,12 +16,12 @@ A range may implement `range.size()`.
 
 `range.size()` returns a `range_type::associated_iterator::difference_type`.
 
-`range_type::associated_iterator` have a type member `iterator_type_t`. 
+`range_type::associated_iterator` have a type member `iterator_type` of type `iterator_type_t`. 
 
-If it is equal to :
-* `contiguous_iterator`: `range.size()` must be defined; equal iterators must compare equal to `true`
-* `non_contiguous_iterator`: `range.size()` may be define; equal iterators must compare equal to `true`
-* `lazy_iterator`: `range.size()` may be defined; comparing two iterators may always return `false`
+If `range_type::associated_iterator::iterator_type` is equal to :
+* `iterator_type_t::contiguous_iterator`: `range.size()` must be defined; equal iterators must compare equal to `true`
+* `iterator_type_t::non_contiguous_iterator`: `range.size()` may be define; equal iterators must compare equal to `true`
+* `iterator_type_t::lazy_iterator`: `range.size()` may be defined; comparing two iterators may always return `false`
 
 ## Containers
 
