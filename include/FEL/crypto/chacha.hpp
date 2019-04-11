@@ -89,15 +89,15 @@ public:
 		fel::copy(x_nonce, nonce());
 	}
 
-	void encrypt(fel::array<uint32_t, 16>& data, uint64_t pos)
+	void encrypt(fel::buffer<uint32_t>& data, uint64_t pos)
 	{
 		set_pos(pos);
 		auto cpy = state;
 		scramble(cpy);
-		for(size_t i = 0; i<state.size(); ++i)
+		for(size_t i = 0; i<state.size() && i<data.size(); ++i)
 		{
 			cpy[i]+=state[i];
-			data[i]^cpy[i];
+			data[i]^=cpy[i];
 		}
 	}
 	

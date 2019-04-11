@@ -242,6 +242,11 @@ namespace fel{
 				deallocator(&*data.begin());
 			}
 		}
+		
+		constexpr buffer<T> backend()
+		{
+			return data;
+		}
 
 		constexpr auto begin()
 		{
