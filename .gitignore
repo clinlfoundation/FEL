@@ -2,3 +2,5 @@ tests/a.out
 tests/bench*.csv
 tests/vgcore.*
 tests/bin/*.*
+*~*
+tests/*.csv
