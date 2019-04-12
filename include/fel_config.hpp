@@ -50,4 +50,15 @@ namespace fel_config{
 	// Value of 12 offers a good compromise of performance and robustness
 	// Value of 20 offers maximum robustness
 	constexpr size_t arc4random_strength = 20;
+
+	constexpr size_t assert_buffer_size = 0;
+	constexpr auto assert = [](bool, const char*) -> void{};
+	/** Simple exit assert
+	constexpr auto assert = [](bool pred, const char*) -> void
+	{
+		if(pred)
+			return;
+		else
+			std::exit(-1);};
+	*/
 }
