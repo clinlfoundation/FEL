@@ -102,7 +102,7 @@ namespace fel{
 		}
 
 		ret operator()(args... arg_list) const {
-			if(fel_config::has_exceptions)
+			if constexpr (fel_config::has_exceptions)
 			{
 				if(!(state & ACTIVE))
 				{
