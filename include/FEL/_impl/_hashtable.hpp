@@ -446,6 +446,20 @@ struct node{
 #endif
 		}
 
+		template<typename tK>
+		bool contains(tK key)
+		{
+			auto off = find_free_key_slot(key, band);
+			auto& slot = band[off];
+			
+			if(slot.ptr == nullptr)
+			{
+				return false;
+			}
+
+			return true;
+		}
+
 		auto diagnose(buffer<char> i_buf) const
 		{
 			auto stream = nameless_range<typename buffer<char>::associated_iterator>(i_buf.begin(), i_buf.end());
